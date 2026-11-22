@@ -32,6 +32,8 @@ class Bill {
   final int? repeatTimes;
   /// ลำดับที่ของรอบนี้ในชุด (เริ่มที่ 0)
   final int occurrenceIndex;
+  /// ลิมิตเก็บล่วงหน้าของบิลนี้ (เดือน); null = ใช้ค่าตั้งต้นของแอพ
+  final int? saveAheadMonths;
 
   final String? seriesId;
   final DateTime? paidAt;
@@ -47,6 +49,7 @@ class Bill {
     this.repeatEvery = 1,
     this.repeatTimes,
     this.occurrenceIndex = 0,
+    this.saveAheadMonths,
     this.seriesId,
     this.paidAt,
     required this.createdAtMs,
@@ -69,6 +72,8 @@ class Bill {
     int? repeatTimes,
     bool clearRepeatTimes = false,
     int? occurrenceIndex,
+    int? saveAheadMonths,
+    bool clearSaveAheadMonths = false,
     String? seriesId,
     bool clearSeriesId = false,
     DateTime? paidAt,
@@ -86,6 +91,9 @@ class Bill {
       repeatTimes:
           clearRepeatTimes ? null : (repeatTimes ?? this.repeatTimes),
       occurrenceIndex: occurrenceIndex ?? this.occurrenceIndex,
+      saveAheadMonths: clearSaveAheadMonths
+          ? null
+          : (saveAheadMonths ?? this.saveAheadMonths),
       seriesId: clearSeriesId ? null : (seriesId ?? this.seriesId),
       paidAt: clearPaidAt ? null : (paidAt ?? this.paidAt),
       createdAtMs: createdAtMs ?? this.createdAtMs,
@@ -102,6 +110,7 @@ class Bill {
         'repeat_every': repeatEvery,
         'repeat_times': repeatTimes,
         'occurrence_index': occurrenceIndex,
+        'save_ahead_months': saveAheadMonths,
         // เก็บ field เก่าไว้เพื่อความเข้ากันได้
         'recurring': isRecurring ? 1 : 0,
         'series_id': seriesId,
@@ -124,6 +133,7 @@ class Bill {
       repeatEvery: (map['repeat_every'] as num?)?.toInt() ?? 1,
       repeatTimes: (map['repeat_times'] as num?)?.toInt(),
       occurrenceIndex: (map['occurrence_index'] as num?)?.toInt() ?? 0,
+      saveAheadMonths: (map['save_ahead_months'] as num?)?.toInt(),
       seriesId: map['series_id'] as String?,
       paidAt:
           map['paid_at'] == null ? null : parseIso(map['paid_at'] as String),

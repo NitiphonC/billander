@@ -18,7 +18,7 @@ class AppDatabase {
     final path = p.join(dir.path, 'billandar.db');
     final opened = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE bills (
@@ -30,6 +30,7 @@ class AppDatabase {
             repeat_every INTEGER NOT NULL DEFAULT 1,
             repeat_times INTEGER,
             occurrence_index INTEGER NOT NULL DEFAULT 0,
+            save_ahead_months INTEGER,
             recurring INTEGER NOT NULL DEFAULT 0,
             series_id TEXT,
             paid_at TEXT,
@@ -72,6 +73,9 @@ class AppDatabase {
               'ALTER TABLE bills ADD COLUMN occurrence_index INTEGER NOT NULL DEFAULT 0');
           await db.execute(
               "UPDATE bills SET repeat_unit = 'month' WHERE recurring = 1");
+        }
+        if (oldVersion < 3) {
+          await db.execute('ALTER TABLE bills ADD COLUMN save_ahead_months INTEGER');
         }
       },
     );

@@ -81,6 +81,53 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SectionCard(
+            title: 'ลิมิตเก็บล่วงหน้า',
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  'ค่าตั้งต้น: ${state.defaultSaveAheadMonths} เดือน',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'บิลที่อยู่ไกลกว่าช่วงนี้จะยังไม่นำมาคำนวณยอดรายวัน '
+                  'ช่วยไม่ให้ยอดเก็บวันแรก ๆ สูงเกินไป '
+                  '(บางบิลตั้งแยกได้ในหน้าแก้บิล)',
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () async {
+                    final value = await showTextDialog(
+                      context,
+                      title: 'เก็บล่วงหน้าได้กี่เดือน',
+                      initialValue: state.defaultSaveAheadMonths.toString(),
+                      label: 'จำนวนเดือน',
+                    );
+                    if (value == null) return;
+                    final months = int.tryParse(value);
+                    if (months == null || months < 1) {
+                      if (context.mounted) {
+                        showMessage(context, 'กรอกจำนวนเดือนให้ถูกต้อง');
+                      }
+                      return;
+                    }
+                    await state.updateSetting(
+                      settingDefaultSaveAheadMonths,
+                      months.toString(),
+                    );
+                  },
+                  icon: const Icon(Icons.date_range),
+                  label: const Text('เปลี่ยนค่าตั้งต้น'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          SectionCard(
             title: 'แจ้งเตือนรายวัน',
             child: Column(
               children: [

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../core/calculator.dart';
 import '../core/date_utils.dart';
 import '../core/money.dart';
 import '../models/bill.dart';
@@ -19,6 +20,7 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _month;
+  Map<String, int> _dailyByDate = {};
 
   @override
   void initState() {
@@ -38,15 +40,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
       (billsByDate[dateKey(bill.dueDate)] ??= <Bill>[]).add(bill);
     }
 
-    final entriesByDate = <String, int>{};
-    for (final entry in widget.state.entriesForMonth(_month)) {
-      final key = dateKey(entry.date);
-      entriesByDate[key] = (entriesByDate[key] ?? 0) + 1;
-    }
-
     final leadingBlanks = DateTime(_month.year, _month.month, 1).weekday % 7;
     final totalDays = daysInMonth(_month);
     final todayKey = dateKey(widget.state.today);
+
+    // ยอดที่ต้องเก็บรายวันสำหรับวันในอนาคต (คำนวณจากคลังปัจจุบัน)
+    final projection = Calculator.project(
+      bills: widget.state.bills,
+      poolSatang: widget.state.poolSatang,
+      today: widget.state.today,
+      maxDays: 120,
+      defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
+    );
+    final dailyByDate = {
+      for (final item in projection) dateKey(item.date): item.requiredSatang,
+    };
+    _dailyByDate = dailyByDate;
+    final entriesByDay = <String, List<LedgerEntry>>{};
+    for (final entry in widget.state.entriesForMonth(_month)) {
+      (entriesByDay[dateKey(entry.date)] ??= <LedgerEntry>[]).add(entry);
+    }
 
     return SafeArea(
       child: Column(
@@ -112,20 +125,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 final key = dateKey(date);
                 final dayBills = billsByDate[key] ?? const <Bill>[];
                 final isToday = key == todayKey;
-                final hasEntry = entriesByDate.containsKey(key);
                 final isOverdue = dayBills.any((b) =>
                     !b.isPaid && b.dueDate.isBefore(widget.state.today));
                 final hasUnpaid = dayBills.any((b) => !b.isPaid);
+                final isPast = date.isBefore(widget.state.today);
+                final dailySatang = dailyByDate[key] ?? 0;
+                final dayEntries = entriesByDay[key] ?? const <LedgerEntry>[];
 
                 return _dayCell(
                   context: context,
                   day: day,
-                  date: date,
-                  dayBills: dayBills,
                   isToday: isToday,
-                  hasEntry: hasEntry,
+                  isPast: isPast,
+                  dailySatang: dailySatang,
+                  hasBill: dayBills.isNotEmpty,
+                  hasPaidBill: dayBills.any((b) => b.isPaid),
+                  hasDeposit:
+                      dayEntries.any((e) => e.type == LedgerType.deposit),
+                  hasWithdrawal: dayEntries
+                      .any((e) => e.type == LedgerType.withdrawal),
                   isOverdue: isOverdue,
                   hasUnpaid: hasUnpaid,
+                  onTap: () => _showDayDetails(context, date, dayBills),
                 );
               },
             ),
@@ -138,12 +159,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget _dayCell({
     required BuildContext context,
     required int day,
-    required DateTime date,
-    required List<Bill> dayBills,
     required bool isToday,
-    required bool hasEntry,
+    required bool isPast,
+    required int dailySatang,
+    required bool hasBill,
+    required bool hasPaidBill,
+    required bool hasDeposit,
+    required bool hasWithdrawal,
     required bool isOverdue,
     required bool hasUnpaid,
+    required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
     final color = isOverdue
@@ -153,7 +178,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             : theme.colorScheme.outline;
 
     return InkWell(
-      onTap: () => _showDayDetails(context, date, dayBills),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
@@ -175,9 +200,30 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 color: isToday ? theme.colorScheme.primary : null,
               ),
             ),
-            if (dayBills.isNotEmpty)
-              Icon(Icons.circle, size: 7, color: color),
-            if (hasEntry) Icon(Icons.savings_outlined, size: 11, color: color),
+            if (!isPast && dailySatang > 0)
+              Text(
+                Money.formatCompact(dailySatang),
+                style: TextStyle(
+                  fontSize: 9,
+                  color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            if (isPast) ...[
+              if (hasPaidBill)
+                const Icon(Icons.check_circle, size: 11, color: Colors.green),
+              if (hasBill && !hasPaidBill)
+                Icon(Icons.receipt_long_outlined, size: 11, color: color),
+              if (hasDeposit)
+                const Icon(Icons.savings_outlined, size: 11, color: Colors.green),
+              if (hasWithdrawal)
+                const Icon(
+                  Icons.remove_circle_outline,
+                  size: 11,
+                  color: Colors.red,
+                ),
+            ] else if (hasBill)
+              Icon(Icons.circle, size: 6, color: color),
           ],
         ),
       ),
@@ -205,6 +251,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                   ),
                   const SizedBox(height: 12),
+                  if (!date.isBefore(widget.state.today) &&
+                      (_dailyByDate[dateKey(date)] ?? 0) > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'วันนี้ต้องเก็บ ${Money.format(_dailyByDate[dateKey(date)] ?? 0)}',
+                        style: Theme.of(sheetContext)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(
+                              color: Theme.of(sheetContext).colorScheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      ),
+                    ),
                   Text('บิลวันนี้',
                       style: Theme.of(sheetContext).textTheme.titleMedium),
                   if (bills.isEmpty) const Text('ไม่มีบิล'),
@@ -216,9 +277,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         '${Money.format(bill.amountSatang)}'
                         '${bill.isPaid ? ' · จ่ายแล้ว' : ' · รอจ่าย'}',
                       ),
-                      trailing: bill.isPaid
-                          ? const Icon(Icons.check_circle, color: Colors.green)
-                          : IconButton.filledTonal(
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            tooltip: 'แก้ไขบิล',
+                            onPressed: () {
+                              Navigator.pop(sheetContext);
+                              BillEditorSheet.show(
+                                context,
+                                widget.state,
+                                bill: bill,
+                              );
+                            },
+                            icon: const Icon(Icons.edit_outlined),
+                          ),
+                          if (bill.isPaid)
+                            const Icon(Icons.check_circle, color: Colors.green)
+                          else
+                            IconButton.filledTonal(
                               tooltip: 'กดเมื่อจ่ายแล้ว',
                               onPressed: () async {
                                 final result =
@@ -233,6 +310,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               },
                               icon: const Icon(Icons.check),
                             ),
+                        ],
+                      ),
                     ),
                   const Divider(),
                   Text('บันทึกเงินวันนี้',

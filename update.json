@@ -1,6 +1,6 @@
 {
-  "versionCode": 2,
-  "versionName": "0.1.1",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.1/app-arm64-v8a-release.apk",
-  "notes": "กำหนดความถี่ซ้ำได้ (ทุกสัปดาห์/เดือน พร้อมจำนวนรอบ) + ปรับฟอนต์ Prompt + ลบ Firebase เพื่อความเป็นส่วนตัว"
+  "versionCode": 3,
+  "versionName": "0.1.2",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.2/app-arm64-v8a-release.apk",
+  "notes": "ตั้งลิมิตเก็บล่วงหน้าได้ทั้งแบบตั้งต้นและแยกบิล + ปฏิทินโชว์ยอดรายวันและแก้บิลได้ตรงนั้น"
 }

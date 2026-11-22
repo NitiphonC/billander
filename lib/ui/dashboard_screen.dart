@@ -318,6 +318,7 @@ class _DailyPlanCardState extends State<_DailyPlanCard> {
       poolSatang: widget.state.poolSatang,
       today: widget.state.today,
       maxDays: 60,
+      defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
     );
     final visible = _expanded ? days : days.take(7).toList();
 

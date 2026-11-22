@@ -1,3 +1,4 @@
+import 'package:billandar/core/app_config.dart';
 import 'package:billandar/core/date_utils.dart';
 import 'package:billandar/data/storage.dart';
 import 'package:billandar/models/bill.dart';
@@ -103,5 +104,51 @@ void main() {
       applyToFuture: false,
     );
     expect(state.bills.length, 1);
+  });
+
+  test('REC-05 ลิมิตตั้งต้น 1 เดือน → บิลอีก 3 เดือนยังไม่เข้าคำนวณ', () async {
+    final state = await freshState();
+    await state.addBill(
+      title: 'บิลไกล',
+      amountSatang: 300000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 90)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    expect(state.plan.bills, isEmpty);
+    expect(state.plan.excludedCount, 1);
+    expect(state.plan.dailyRequiredSatang, 0);
+  });
+
+  test('REC-06 ตั้งแยกบิล 3 เดือน → บิลเดิมเข้าคำนวณ', () async {
+    final state = await freshState();
+    await state.addBill(
+      title: 'หนี้ก้อนใหญ่',
+      amountSatang: 300000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 90)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      saveAheadMonths: 3,
+    );
+    expect(state.plan.bills.length, 1);
+    expect(state.plan.excludedCount, 0);
+    expect(state.plan.dailyRequiredSatang, greaterThan(0));
+  });
+
+  test('REC-07 เปลี่ยนค่าตั้งต้นเป็น 4 เดือน → บิล 3 เดือนเข้าคำนวณ', () async {
+    final state = await freshState();
+    await state.updateSetting(settingDefaultSaveAheadMonths, '4');
+    await state.addBill(
+      title: 'บิลไกล',
+      amountSatang: 100000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 90)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    expect(state.defaultSaveAheadMonths, 4);
+    expect(state.plan.bills.length, 1);
   });
 }

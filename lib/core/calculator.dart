@@ -37,6 +37,8 @@ class SavingsPlan {
   final DateTime? earliestDueDate;
   final int daysToEarliestDue;
   final int overdueCount;
+  /// จำนวนบิลที่ยังอยู่นอกช่วง "เก็บล่วงหน้า" จึงยังไม่นำมาคำนวณวันนี้
+  final int excludedCount;
   final String? note;
 
   const SavingsPlan({
@@ -50,6 +52,7 @@ class SavingsPlan {
     required this.earliestDueDate,
     required this.daysToEarliestDue,
     required this.overdueCount,
+    required this.excludedCount,
     required this.note,
   });
 
@@ -82,6 +85,7 @@ class Calculator {
     required int poolSatang,
     required DateTime today,
     int maxDays = 90,
+    int defaultSaveAheadMonths = 1,
   }) {
     var balance = poolSatang;
     final pending = bills
@@ -115,7 +119,12 @@ class Calculator {
         pending.removeWhere((b) => paidIds.contains(b.id));
       }
 
-      final plan = calculate(bills: pending, poolSatang: balance, today: cursor);
+      final plan = calculate(
+        bills: pending,
+        poolSatang: balance,
+        today: cursor,
+        defaultSaveAheadMonths: defaultSaveAheadMonths,
+      );
       result.add(ProjectionDay(
         date: cursor,
         requiredSatang: plan.dailyRequiredSatang,
@@ -137,10 +146,18 @@ class Calculator {
     required List<Bill> bills,
     required int poolSatang,
     required DateTime today,
+    int defaultSaveAheadMonths = 1,
   }) {
     final t = dateOnly(today);
 
-    final active = bills.where((b) => !b.isPaid).toList()
+    // กรองบิลที่ยังอยู่นอกช่วงเก็บล่วงหน้า (default หรือกำหนดแยกต่อบิล)
+    final unpaid = bills.where((b) => !b.isPaid).toList();
+    final active = unpaid.where((bill) {
+      final months = bill.saveAheadMonths ?? defaultSaveAheadMonths;
+      final limit = months < 1 ? 1 : months;
+      final horizon = addMonthsClamped(t, limit);
+      return !bill.dueDate.isAfter(horizon);
+    }).toList()
       ..sort((a, b) {
         final byDue = a.dueDate.compareTo(b.dueDate);
         if (byDue != 0) return byDue;
@@ -185,8 +202,11 @@ class Calculator {
     final earliest = active.isEmpty ? null : active.first.dueDate;
     final toEarliest = earliest == null ? 0 : daysBetween(t, earliest) + 1;
 
+    final excludedCount = unpaid.length - active.length;
     String? note;
-    if (active.isEmpty) {
+    if (active.isEmpty && excludedCount > 0) {
+      note = 'ยังไม่มีบิลเข้าช่วงเก็บ ($excludedCount บิลรออยู่)';
+    } else if (active.isEmpty) {
       note = 'ยังไม่มีบิลที่ต้องจ่าย';
     } else if (overdueCount > 0) {
       note = 'มี $overdueCount บิลเลยกำหนด ต้องรีบจ่ายวันนี้';
@@ -209,6 +229,7 @@ class Calculator {
       earliestDueDate: earliest,
       daysToEarliestDue: toEarliest < 0 ? 0 : toEarliest,
       overdueCount: overdueCount,
+      excludedCount: excludedCount,
       note: note,
     );
   }

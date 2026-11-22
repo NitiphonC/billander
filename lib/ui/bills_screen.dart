@@ -229,10 +229,13 @@ class _BillEditorFormState extends State<_BillEditorForm> {
   late final TextEditingController _amountController;
   late final TextEditingController _everyController;
   late final TextEditingController _timesController;
+  late final TextEditingController _aheadController;
   late DateTime _dueDate;
   late RepeatUnit _repeatUnit;
   late bool _forever;
+  late bool _useDefaultAhead;
   bool _applyToFuture = false;
+  String? _saveError;
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -251,6 +254,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
       text: (bill?.repeatTimes ?? 1).toString(),
     );
     _forever = bill?.repeatTimes == null;
+    _useDefaultAhead = bill?.saveAheadMonths == null;
+    _aheadController = TextEditingController(
+      text: (bill?.saveAheadMonths ?? widget.state.defaultSaveAheadMonths)
+          .toString(),
+    );
   }
 
   @override
@@ -259,6 +267,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
     _amountController.dispose();
     _everyController.dispose();
     _timesController.dispose();
+    _aheadController.dispose();
     super.dispose();
   }
 
@@ -276,9 +285,19 @@ class _BillEditorFormState extends State<_BillEditorForm> {
     if (!_formKey.currentState!.validate()) return;
     final amount = Money.tryParse(_amountController.text);
     if (amount == null || amount <= 0) return;
+    try {
+      await _saveInner(amount);
+    } catch (_) {
+      if (mounted) setState(() => _saveError = 'บันทึกไม่สำเร็จ กรุณาลองใหม่');
+    }
+  }
 
+  Future<void> _saveInner(int amount) async {
     final every = int.tryParse(_everyController.text) ?? 1;
     final times = _forever ? null : int.tryParse(_timesController.text) ?? 1;
+    final ahead = _useDefaultAhead
+        ? null
+        : (int.tryParse(_aheadController.text) ?? 1);
     final bill = widget.bill;
     if (bill == null) {
       await widget.state.addBill(
@@ -288,6 +307,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         repeatUnit: _repeatUnit,
         repeatEvery: every < 1 ? 1 : every,
         repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
+        saveAheadMonths: ahead,
       );
     } else {
       await widget.state.updateBill(
@@ -298,6 +318,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         repeatUnit: _repeatUnit,
         repeatEvery: every < 1 ? 1 : every,
         repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
+        saveAheadMonths: ahead,
         applyToFuture: _applyToFuture,
       );
     }
@@ -319,6 +340,14 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 ),
           ),
           const SizedBox(height: 16),
+          if (_saveError != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(
+                _saveError!,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
           TextFormField(
             controller: _titleController,
             decoration: const InputDecoration(
@@ -429,6 +458,30 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
+          const SizedBox(height: 12),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('ใช้ค่าตั้งต้นการเก็บล่วงหน้า'),
+            subtitle: Text(
+              'ตอนนี้ ${widget.state.defaultSaveAheadMonths} เดือน',
+            ),
+            value: _useDefaultAhead,
+            onChanged: (v) => setState(() => _useDefaultAhead = v),
+          ),
+          if (!_useDefaultAhead)
+            TextFormField(
+              controller: _aheadController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(
+                labelText: 'บิลนี้เก็บล่วงหน้าได้กี่เดือน',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final n = int.tryParse(v ?? '');
+                if (n == null || n < 1) return 'ต้องอย่างน้อย 1 เดือน';
+                return null;
+              },
+            ),
           if (widget.bill != null && widget.bill!.isRecurring)
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

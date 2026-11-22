@@ -49,6 +49,7 @@ class AppState extends ChangeNotifier {
         bills: _bills,
         poolSatang: poolSatang,
         today: _today,
+        defaultSaveAheadMonths: defaultSaveAheadMonths,
       );
 
   LedgerEntry? get initialEntry {
@@ -70,6 +71,14 @@ class AppState extends ChangeNotifier {
   }
 
   String get updateUrl => _settings[settingUpdateUrl] ?? '';
+
+  /// ค่าตั้งต้น: เก็บล่วงหน้าได้ไม่เกินกี่เดือน (บิลที่ระบุเองจะ override)
+  int get defaultSaveAheadMonths {
+    final value = int.tryParse(
+            _settings[settingDefaultSaveAheadMonths] ?? '') ??
+        1;
+    return value < 1 ? 1 : value;
+  }
 
   /// ข้อความ error ที่โชว์ผู้ใช้ได้ (ไม่โชว์ technical exception)
   String? get userError => error == null ? null : 'เกิดปัญหาเล็กน้อย — ข้อมูลในเครื่องยังปลอดภัย';
@@ -282,6 +291,7 @@ class AppState extends ChangeNotifier {
             repeatEvery: every,
             repeatTimes: anchor.repeatTimes,
             occurrenceIndex: index,
+            saveAheadMonths: anchor.saveAheadMonths,
             seriesId: group.key,
             createdAtMs: now,
             updatedAtMs: now,
@@ -302,6 +312,7 @@ class AppState extends ChangeNotifier {
     required RepeatUnit repeatUnit,
     required int repeatEvery,
     int? repeatTimes,
+    int? saveAheadMonths,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = newId();
@@ -314,6 +325,8 @@ class AppState extends ChangeNotifier {
       repeatEvery: repeatEvery < 1 ? 1 : repeatEvery,
       repeatTimes: repeatTimes,
       occurrenceIndex: 0,
+      saveAheadMonths:
+          saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
       seriesId: repeatUnit == RepeatUnit.none ? null : id,
       createdAtMs: now,
       updatedAtMs: now,
@@ -332,6 +345,7 @@ class AppState extends ChangeNotifier {
     required RepeatUnit repeatUnit,
     required int repeatEvery,
     int? repeatTimes,
+    int? saveAheadMonths,
     required bool applyToFuture,
   }) async {
     final original = billById(billId);
@@ -380,6 +394,9 @@ class AppState extends ChangeNotifier {
         repeatTimes: repeatTimes,
         clearRepeatTimes: repeatTimes == null,
         occurrenceIndex: shouldUpdateSeries ? target.occurrenceIndex : 0,
+        saveAheadMonths:
+            saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
+        clearSaveAheadMonths: saveAheadMonths == null,
         clearSeriesId: repeatUnit == RepeatUnit.none,
         updatedAtMs: now,
       );
