@@ -203,36 +203,85 @@ class AppState extends ChangeNotifier {
     await UpdateService.instance.openDownload(info.apkUrl);
   }
 
+  /// วันที่ของรอบที่ [index] (0 = รอบแรก) ตามความถี่ที่เลือก
+  DateTime occurrenceDate(
+    DateTime anchor,
+    RepeatUnit unit,
+    int every,
+    int index,
+  ) {
+    final step = every < 1 ? 1 : every;
+    switch (unit) {
+      case RepeatUnit.week:
+        return dateOnly(anchor.add(Duration(days: 7 * step * index)));
+      case RepeatUnit.month:
+        return addMonthsClamped(anchor, step * index);
+      case RepeatUnit.none:
+        return anchor;
+    }
+  }
+
   Future<void> _materializeRecurring() async {
-    final horizon = addMonthsClamped(_today, 12);
+    final horizon = _today.add(const Duration(days: 365));
     final groups = <String, List<Bill>>{};
     for (final bill in _bills) {
       final seriesId = bill.seriesId;
-      if (bill.recurring && seriesId != null) {
+      if (bill.isRecurring && seriesId != null) {
         (groups[seriesId] ??= <Bill>[]).add(bill);
       }
     }
 
     for (final group in groups.entries) {
       final members = group.value
-        ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
-      final anchor = members.first;
-      var cursor = anchor.dueDate.isBefore(firstDayOfMonth(_today))
-          ? firstDayOfMonth(_today)
-          : anchor.dueDate;
-      var guard = 0;
-      while (!cursor.isAfter(horizon) && guard < 60) {
-        guard++;
-        final exists = members
-            .any((b) => dateKey(b.dueDate) == dateKey(cursor));
-        if (!exists) {
-          final now = DateTime.now().millisecondsSinceEpoch;
+        ..sort((a, b) => a.occurrenceIndex.compareTo(b.occurrenceIndex));
+      var anchor = members.first;
+      final unit = anchor.repeatUnit;
+      final every = anchor.repeatEvery < 1 ? 1 : anchor.repeatEvery;
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      // ข้อมูลเวอร์ชันเก่าทุกตัวมี occurrence_index = 0 → คำนวณลำดับใหม่จากวันที่
+      if (members.map((b) => b.occurrenceIndex).toSet().length !=
+          members.length) {
+        final fixed = <Bill>[];
+        for (final bill in members) {
+          final index = unit == RepeatUnit.week
+              ? bill.dueDate.difference(anchor.dueDate).inDays ~/ (7 * every)
+              : (monthIndex(bill.dueDate) - monthIndex(anchor.dueDate)) ~/ every;
+          final next = bill.copyWith(
+            occurrenceIndex: index < 0 ? 0 : index,
+            repeatUnit: unit,
+            repeatEvery: every,
+            repeatTimes: anchor.repeatTimes,
+            updatedAtMs: now,
+          );
+          await _db.upsertBill(next);
+          fixed.add(next);
+        }
+        _replaceBills(fixed);
+        members
+          ..clear()
+          ..addAll(fixed)
+          ..sort((a, b) => a.occurrenceIndex.compareTo(b.occurrenceIndex));
+        anchor = members.first;
+      }
+
+      final maxIndex = anchor.repeatTimes == null
+          ? 300
+          : anchor.repeatTimes! - 1;
+      var index = 0;
+      while (index <= maxIndex && index < 300) {
+        final date = occurrenceDate(anchor.dueDate, unit, every, index);
+        if (anchor.repeatTimes == null && date.isAfter(horizon)) break;
+        if (!members.any((b) => b.occurrenceIndex == index)) {
           final created = Bill(
             id: newId(),
             title: anchor.title,
             amountSatang: anchor.amountSatang,
-            dueDate: cursor,
-            recurring: true,
+            dueDate: date,
+            repeatUnit: unit,
+            repeatEvery: every,
+            repeatTimes: anchor.repeatTimes,
+            occurrenceIndex: index,
             seriesId: group.key,
             createdAtMs: now,
             updatedAtMs: now,
@@ -241,7 +290,7 @@ class AppState extends ChangeNotifier {
           _bills = [..._bills, created];
           members.add(created);
         }
-        cursor = addMonthsClamped(cursor, 1);
+        index++;
       }
     }
   }
@@ -250,7 +299,9 @@ class AppState extends ChangeNotifier {
     required String title,
     required int amountSatang,
     required DateTime dueDate,
-    required bool recurring,
+    required RepeatUnit repeatUnit,
+    required int repeatEvery,
+    int? repeatTimes,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = newId();
@@ -259,14 +310,17 @@ class AppState extends ChangeNotifier {
       title: title.trim(),
       amountSatang: amountSatang.abs(),
       dueDate: dateOnly(dueDate),
-      recurring: recurring,
-      seriesId: recurring ? id : null,
+      repeatUnit: repeatUnit,
+      repeatEvery: repeatEvery < 1 ? 1 : repeatEvery,
+      repeatTimes: repeatTimes,
+      occurrenceIndex: 0,
+      seriesId: repeatUnit == RepeatUnit.none ? null : id,
       createdAtMs: now,
       updatedAtMs: now,
     );
     await _db.upsertBill(bill);
     _bills = [..._bills, bill];
-    if (recurring) await _materializeRecurring();
+    if (repeatUnit != RepeatUnit.none) await _materializeRecurring();
     await _commit();
   }
 
@@ -275,16 +329,35 @@ class AppState extends ChangeNotifier {
     required String title,
     required int amountSatang,
     required DateTime dueDate,
-    required bool recurring,
+    required RepeatUnit repeatUnit,
+    required int repeatEvery,
+    int? repeatTimes,
     required bool applyToFuture,
   }) async {
     final original = billById(billId);
     if (original == null) return;
+    final every = repeatEvery < 1 ? 1 : repeatEvery;
+    final now = DateTime.now().millisecondsSinceEpoch;
 
-    // บิลซ้ำทุกเดือนต้องเลื่อนวันจ่ายทุกงวดที่ยังไม่จ่ายด้วย
-    // มิเช่นนั้นจะเหลือบิลเก่าที่วันเดิมซ้ำกับบิลที่แก้ใหม่
+    // เปลี่ยนจากซ้ำ → ไม่ซ้ำ: ลบรอบในอนาคตที่ยังไม่จ่ายออก
+    if (original.isRecurring && repeatUnit == RepeatUnit.none) {
+      final futureIds = _bills
+          .where((b) =>
+              b.seriesId == original.seriesId &&
+              !b.isPaid &&
+              b.occurrenceIndex > original.occurrenceIndex)
+          .map((b) => b.id)
+          .toList();
+      if (futureIds.isNotEmpty) {
+        await _db.deleteBills(futureIds);
+        _bills = _bills.where((b) => !futureIds.contains(b.id)).toList();
+      }
+    }
+
     final shouldUpdateSeries =
-        (recurring || applyToFuture) && original.seriesId != null;
+        (repeatUnit != RepeatUnit.none || applyToFuture) &&
+            original.seriesId != null &&
+            repeatUnit != RepeatUnit.none;
     final targets = shouldUpdateSeries
         ? _bills
             .where((b) =>
@@ -292,27 +365,29 @@ class AppState extends ChangeNotifier {
             .toList()
         : <Bill>[original];
 
-    final now = DateTime.now().millisecondsSinceEpoch;
     final newAnchorDate = dateOnly(dueDate);
-    final anchorMonth = monthIndex(original.dueDate);
     final updated = <Bill>[];
     for (final target in targets) {
-      final monthOffset = monthIndex(target.dueDate) - anchorMonth;
+      final indexDelta = target.occurrenceIndex - original.occurrenceIndex;
       final next = target.copyWith(
         title: title.trim(),
         amountSatang: amountSatang.abs(),
         dueDate: shouldUpdateSeries
-            ? addMonthsClamped(newAnchorDate, monthOffset)
+            ? occurrenceDate(newAnchorDate, repeatUnit, every, indexDelta)
             : newAnchorDate,
-        recurring: recurring,
-        clearSeriesId: !recurring,
+        repeatUnit: repeatUnit,
+        repeatEvery: every,
+        repeatTimes: repeatTimes,
+        clearRepeatTimes: repeatTimes == null,
+        occurrenceIndex: shouldUpdateSeries ? target.occurrenceIndex : 0,
+        clearSeriesId: repeatUnit == RepeatUnit.none,
         updatedAtMs: now,
       );
       await _db.upsertBill(next);
       updated.add(next);
     }
     _replaceBills(updated);
-    if (recurring) await _materializeRecurring();
+    if (repeatUnit != RepeatUnit.none) await _materializeRecurring();
     await _commit();
   }
 
@@ -324,7 +399,7 @@ class AppState extends ChangeNotifier {
       ids.addAll(_bills
           .where((b) =>
               b.seriesId == bill.seriesId &&
-              !b.dueDate.isBefore(bill.dueDate) &&
+              b.occurrenceIndex >= bill.occurrenceIndex &&
               !b.isPaid)
           .map((b) => b.id));
     }

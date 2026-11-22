@@ -80,6 +80,18 @@ class BillsScreen extends StatelessWidget {
     );
   }
 
+  String _repeatLabel(Bill bill) {
+    if (!bill.isRecurring) return '';
+    final unit =
+        bill.repeatUnit == RepeatUnit.week ? 'สัปดาห์' : 'เดือน';
+    final every = bill.repeatEvery == 1 ? '' : ' ${bill.repeatEvery}';
+    final count = bill.repeatTimes == null
+        ? ' ไม่จำกัด'
+        : ' ${bill.repeatTimes} รอบ';
+    return ' · ทุก$every $unit$count'
+        ' (รอบที่ ${bill.occurrenceIndex + 1})';
+  }
+
   Widget _billTile(BuildContext context, Bill bill) {
     final isOverdue = bill.dueDate.isBefore(state.today);
     return ListTile(
@@ -90,7 +102,7 @@ class BillsScreen extends StatelessWidget {
       title: Text(bill.title),
       subtitle: Text(
         '${formatDateThai(bill.dueDate)}'
-        '${bill.recurring ? ' · ทุกเดือน' : ''}'
+        '${_repeatLabel(bill)}'
         '${isOverdue ? ' · เลยกำหนด' : ''}',
       ),
       trailing: SizedBox(
@@ -215,8 +227,11 @@ class _BillEditorForm extends StatefulWidget {
 class _BillEditorFormState extends State<_BillEditorForm> {
   late final TextEditingController _titleController;
   late final TextEditingController _amountController;
+  late final TextEditingController _everyController;
+  late final TextEditingController _timesController;
   late DateTime _dueDate;
-  late bool _recurring;
+  late RepeatUnit _repeatUnit;
+  late bool _forever;
   bool _applyToFuture = false;
   final _formKey = GlobalKey<FormState>();
 
@@ -229,13 +244,21 @@ class _BillEditorFormState extends State<_BillEditorForm> {
       text: bill == null ? '' : Money.toBaht(bill.amountSatang).toStringAsFixed(0),
     );
     _dueDate = bill?.dueDate ?? widget.initialDate ?? widget.state.today;
-    _recurring = bill?.recurring ?? false;
+    _repeatUnit = bill?.repeatUnit ?? RepeatUnit.none;
+    _everyController =
+        TextEditingController(text: (bill?.repeatEvery ?? 1).toString());
+    _timesController = TextEditingController(
+      text: (bill?.repeatTimes ?? 1).toString(),
+    );
+    _forever = bill?.repeatTimes == null;
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _amountController.dispose();
+    _everyController.dispose();
+    _timesController.dispose();
     super.dispose();
   }
 
@@ -254,13 +277,17 @@ class _BillEditorFormState extends State<_BillEditorForm> {
     final amount = Money.tryParse(_amountController.text);
     if (amount == null || amount <= 0) return;
 
+    final every = int.tryParse(_everyController.text) ?? 1;
+    final times = _forever ? null : int.tryParse(_timesController.text) ?? 1;
     final bill = widget.bill;
     if (bill == null) {
       await widget.state.addBill(
         title: _titleController.text,
         amountSatang: amount,
         dueDate: _dueDate,
-        recurring: _recurring,
+        repeatUnit: _repeatUnit,
+        repeatEvery: every < 1 ? 1 : every,
+        repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
       );
     } else {
       await widget.state.updateBill(
@@ -268,7 +295,9 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         title: _titleController.text,
         amountSatang: amount,
         dueDate: _dueDate,
-        recurring: _recurring,
+        repeatUnit: _repeatUnit,
+        repeatEvery: every < 1 ? 1 : every,
+        repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
         applyToFuture: _applyToFuture,
       );
     }
@@ -324,20 +353,83 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 children: [
                   const Icon(Icons.calendar_today_outlined),
                   const SizedBox(width: 12),
-                  Text('วันจ่าย: ${formatDateThai(_dueDate)}'),
+                  Text('วันจ่ายรอบแรก: ${formatDateThai(_dueDate)}'),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 8),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('ซ้ำทุกเดือน'),
-            subtitle: const Text('สร้างบิลอัตโนมัติล่วงหน้า 12 เดือน'),
-            value: _recurring,
-            onChanged: (v) => setState(() => _recurring = v),
+          const SizedBox(height: 12),
+          DropdownButtonFormField<RepeatUnit>(
+            initialValue: _repeatUnit,
+            decoration: const InputDecoration(
+              labelText: 'ทำซ้ำ',
+              border: OutlineInputBorder(),
+            ),
+            items: RepeatUnit.values
+                .map((u) =>
+                    DropdownMenuItem(value: u, child: Text(u.label)))
+                .toList(),
+            onChanged: (value) {
+              if (value != null) setState(() => _repeatUnit = value);
+            },
           ),
-          if (widget.bill != null && widget.bill!.recurring)
+          if (_repeatUnit != RepeatUnit.none) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Text('ทุก'),
+                const SizedBox(width: 8),
+                SizedBox(
+                  width: 70,
+                  child: TextFormField(
+                    controller: _everyController,
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    validator: (v) {
+                      final n = int.tryParse(v ?? '');
+                      if (n == null || n < 1) return '≥1';
+                      return null;
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(_repeatUnit == RepeatUnit.week ? 'สัปดาห์' : 'เดือน'),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('ไม่จำกัดจำนวนรอบ'),
+              value: _forever,
+              onChanged: (v) => setState(() => _forever = v),
+            ),
+            if (!_forever)
+              TextFormField(
+                controller: _timesController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'จำนวนรอบทั้งหมด (รวมรอบแรก)',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  final n = int.tryParse(v ?? '');
+                  if (n == null || n < 1) return 'ต้องอย่างน้อย 1 รอบ';
+                  return null;
+                },
+              ),
+            const SizedBox(height: 4),
+            Text(
+              _forever
+                  ? 'ระบบจะสร้างบิลต่อไปเรื่อย ๆ (แสดงล่วงหน้า 1 ปี)'
+                  : 'ตัวอย่าง: ใส่ 3 = จ่ายทั้งหมด 3 รอบ (รอบนี้ + อีก 2 รอบ)',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
+          if (widget.bill != null && widget.bill!.isRecurring)
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('ใช้กับรอบในอนาคตด้วย'),

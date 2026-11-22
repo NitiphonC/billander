@@ -83,7 +83,10 @@ void main() {
         title: 'ค่าเช่า',
         amountSatang: 850000,
         dueDate: DateTime(2026, 12, 1),
-        recurring: true,
+        repeatUnit: RepeatUnit.month,
+        repeatEvery: 2,
+        repeatTimes: 5,
+        occurrenceIndex: 1,
         seriesId: 'series-1',
         paidAt: DateTime(2026, 12, 1, 9, 30),
         createdAtMs: 100,
@@ -94,7 +97,11 @@ void main() {
       expect(restored.title, bill.title);
       expect(restored.amountSatang, bill.amountSatang);
       expect(restored.dueDate, bill.dueDate);
-      expect(restored.recurring, isTrue);
+      expect(restored.isRecurring, isTrue);
+      expect(restored.repeatUnit, RepeatUnit.month);
+      expect(restored.repeatEvery, 2);
+      expect(restored.repeatTimes, 5);
+      expect(restored.occurrenceIndex, 1);
       expect(restored.seriesId, 'series-1');
       expect(restored.paidAt, bill.paidAt);
       expect(restored.isPaid, isTrue);

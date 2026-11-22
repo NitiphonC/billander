@@ -41,6 +41,26 @@ DateTime addMonthsClamped(DateTime d, int months) {
 
 int monthIndex(DateTime d) => d.year * 12 + d.month - 1;
 
+/// สร้างวันจ่ายของบิลซ้ำทุก [intervalMonths] เดือน ตั้งแต่ [anchor] ถึง [through]
+/// คำนวณจาก anchor ทุกครั้งเพื่อไม่ให้วันที่เคลื่อน (เช่น 31 ม.ค. → 31 มี.ค. → 31 พ.ค.)
+List<DateTime> recurringDueDates({
+  required DateTime anchor,
+  required int intervalMonths,
+  required DateTime through,
+  int maxCount = 60,
+}) {
+  final step = intervalMonths < 1 ? 1 : intervalMonths;
+  final start = dateOnly(anchor);
+  final end = dateOnly(through);
+  final dates = <DateTime>[];
+  for (var i = 0; i < maxCount; i++) {
+    final date = addMonthsClamped(start, i * step);
+    if (date.isAfter(end)) break;
+    dates.add(date);
+  }
+  return dates;
+}
+
 DateTime firstDayOfMonth(DateTime d) => DateTime(d.year, d.month, 1);
 
 String encodeStringList(List<String> values) => jsonEncode(values);
