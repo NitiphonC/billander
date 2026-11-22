@@ -13,7 +13,6 @@ import '../data/storage.dart';
 import '../models/bill.dart';
 import '../models/ledger_entry.dart';
 import '../services/notification_service.dart';
-import '../services/sync_service.dart';
 import '../services/update_service.dart';
 
 String newId() =>
@@ -23,11 +22,8 @@ String newId() =>
 enum PaymentResult { success, insufficient, notFound }
 
 class AppState extends ChangeNotifier {
-  AppState({SyncService? sync, AppStorage? storage})
-      : _sync = sync ?? NoopSyncService(),
-        _db = storage ?? AppStorage.create();
+  AppState({AppStorage? storage}) : _db = storage ?? AppStorage.create();
 
-  final SyncService _sync;
   final AppStorage _db;
   final NotificationService _notifications = NotificationService.instance;
 
@@ -73,19 +69,10 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  bool get syncEnabled => _settings[settingSyncEnabled] == 'true';
-  bool get syncConfigured => _sync.isConfigured;
-  String? get lastSyncAt => _settings[settingLastSync];
   String get updateUrl => _settings[settingUpdateUrl] ?? '';
 
   /// ข้อความ error ที่โชว์ผู้ใช้ได้ (ไม่โชว์ technical exception)
-  String? get userError {
-    if (error == null) return null;
-    if (error!.startsWith('ซิงก์ไม่สำเร็จ')) {
-      return 'ซิงก์ข้อมูลไม่สำเร็จ — ข้อมูลในเครื่องยังปลอดภัย';
-    }
-    return 'เกิดปัญหาเล็กน้อย — ข้อมูลในเครื่องยังปลอดภัย';
-  }
+  String? get userError => error == null ? null : 'เกิดปัญหาเล็กน้อย — ข้อมูลในเครื่องยังปลอดภัย';
 
   Bill? billById(String id) {
     for (final bill in _bills) {
@@ -126,12 +113,10 @@ class AppState extends ChangeNotifier {
     loading = true;
     notifyListeners();
     try {
-      await _sync.initialize();
       await _db.init();
 
       _settings.clear();
       _settings.addAll(await _db.getAllSettings());
-      await _pullFromCloudOnce();
 
       _bills = await _db.getBills();
       _entries = await _db.getEntries();
@@ -438,55 +423,7 @@ class AppState extends ChangeNotifier {
         key == settingReminderMinute) {
       await _refreshNotification();
     }
-    if (key == settingSyncEnabled && syncEnabled) {
-      await syncNow();
-    }
     notifyListeners();
-  }
-
-  Future<void> syncNow() async {
-    if (!syncEnabled || !_sync.isConfigured) return;
-    try {
-      await _sync.signIn();
-      await _sync.push(
-        bills: _bills,
-        entries: _entries,
-        settings: _settings,
-      );
-      await _pullFromCloudOnce();
-      _bills = await _db.getBills();
-      _entries = await _db.getEntries();
-      await _setSettingSilent(
-          settingLastSync, DateTime.now().toIso8601String());
-      error = null;
-    } catch (e) {
-      error = 'ซิงก์ไม่สำเร็จ: $e';
-    }
-    notifyListeners();
-  }
-
-  Future<void> _pullFromCloudOnce() async {
-    if (!syncEnabled || !_sync.isConfigured) return;
-    await _sync.signIn();
-    final snapshot = await _sync.pull();
-    if (snapshot == null) return;
-
-    final localBills = {for (final b in await _db.getBills()) b.id: b};
-    final remoteBills = snapshot.bills.where((remote) {
-      final local = localBills[remote.id];
-      return local == null || remote.updatedAtMs >= local.updatedAtMs;
-    }).toList();
-    await _db.upsertBills(remoteBills);
-
-    final localEntries = {for (final e in await _db.getEntries()) e.id: e};
-    final remoteEntries = snapshot.entries.where((remote) {
-      final local = localEntries[remote.id];
-      return local == null || remote.updatedAtMs >= local.updatedAtMs;
-    }).toList();
-    await _db.upsertEntries(remoteEntries);
-
-    final merged = <String, String>{..._settings, ...snapshot.settings};
-    await _db.setSettings(merged);
   }
 
   Future<void> _setSettingSilent(String key, String value) async {
@@ -513,22 +450,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _commit() async {
-    await _pushToCloud();
     await _refreshNotification();
     notifyListeners();
-  }
-
-  Future<void> _pushToCloud() async {
-    if (!syncEnabled || !_sync.isConfigured) return;
-    try {
-      await _sync.push(
-        bills: _bills,
-        entries: _entries,
-        settings: _settings,
-      );
-    } catch (_) {
-      // ซิงก์ล้มเหลวไม่ควรบล็อกการใช้งานแบบ local-first
-    }
   }
 
   void _replaceBills(List<Bill> updated) {

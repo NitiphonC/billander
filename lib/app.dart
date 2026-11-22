@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'services/sync_service.dart';
 import 'ui/home_shell.dart';
 
 class BillandarApp extends StatelessWidget {
-  const BillandarApp({super.key, this.sync});
-
-  /// ส่ง FirebaseSyncService เข้ามาได้เมื่อพร้อมซิงก์คลาวด์
-  final SyncService? sync;
+  const BillandarApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +22,7 @@ class BillandarApp extends StatelessWidget {
               fontFamilyFallback: const ['NotoSansThai', 'sans-serif'],
             ),
       ),
-      home: HomeShell(sync: sync),
+      home: const HomeShell(),
     );
   }
 }

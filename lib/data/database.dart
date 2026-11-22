@@ -2,7 +2,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 
-import '../core/date_utils.dart';
 import '../models/bill.dart';
 import '../models/ledger_entry.dart';
 
@@ -166,25 +165,9 @@ class AppDatabase {
     await batch.commit(noResult: true);
   }
 
-  Future<void> exportToJson() async {
-    // ใช้สำหรับสำรองข้อมูล manually (ดูใน SettingsScreen)
-    final bills = await getBills();
-    final entries = await getEntries();
-    final settings = await getAllSettings();
-    // ignore: avoid_print
-    print({
-      'bills': bills.map((b) => b.toMap()).toList(),
-      'entries': entries.map((e) => e.toMap()).toList(),
-      'settings': settings,
-    });
-  }
-
-  DateTime? parseSettingDate(String? key) => tryParseDateKey(key);
 }
 
 const String settingLastSeenDate = 'last_seen_date';
 const String settingNotifications = 'notifications_enabled';
 const String settingReminderHour = 'reminder_hour';
 const String settingReminderMinute = 'reminder_minute';
-const String settingSyncEnabled = 'sync_enabled';
-const String settingLastSync = 'last_sync_at';

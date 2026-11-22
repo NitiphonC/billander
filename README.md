@@ -10,7 +10,7 @@
 - กดยืนยัน "จ่ายบิลแล้ว" ได้ก็ต่อเมื่อเงินในคลังพอ (ปรับเงินตั้งต้นเองได้)
 - เมื่อผ่านไปหนึ่งวันโดยไม่บันทึก ระบบคำนวณใหม่ทันที → ยอดต่อวันเพิ่มขึ้น
 - ปฏิทินรายเดือน + ประวัติรายวัน + แจ้งเตือนรายวัน
-- เก็บในเครื่องด้วย SQLite พร้อมโครงสร้างซิงก์ Firebase (เปิดได้เมื่อพร้อม)
+- เก็บในเครื่องด้วย SQLite (Android) / localStorage (เว็บ) — ไม่มีคลาวด์ ไม่ส่งข้อมูลออก
 
 ## สูตรคำนวณ (ตามที่ยืนยัน)
 
@@ -72,24 +72,9 @@ flutter run
 > `<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>`
 > ลงใน `android/app/src/main/AndroidManifest.xml` (เหนือ `<application>`)
 
-## เปิดซิงก์ Firebase (ไม่บังคับ)
+## ความปลอดภัย / ความเป็นส่วนตัว
 
-```powershell
-flutterfire configure
-```
-
-แล้วเปลี่ยน `lib/main.dart`:
-
-```dart
-import 'package:billandar/services/firebase_sync_service.dart';
-import 'firebase_options.dart';
-
-runApp(BillandarApp(
-  sync: FirebaseSyncService(DefaultFirebaseOptions.currentPlatform),
-));
-```
-
-Firestore จะใช้โครงสร้าง `users/{uid}/bills`, `users/{uid}/ledger`, `users/{uid}/settings` (anonymous auth) และใช้ last-write-wins ตาม `updated_at`
+อ่าน `PRIVACY.md` — แอพไม่มี Firebase/Analytics/โฆษณา ไม่ส่งข้อมูลการเงินออกจากเครื่อง และลบโค้ดที่ `print` ข้อมูลออกแล้ว
 
 ## โครงสร้าง
 
@@ -99,7 +84,7 @@ lib/
   models/       bill.dart, ledger_entry.dart
   data/         database.dart (SQLite)
   state/        app_state.dart (business logic ทั้งหมด)
-  services/     notification_service.dart, sync_service.dart, firebase_sync_service.dart
+  services/     notification_service.dart, update_service.dart
   ui/           dashboard, calendar, bills, history, settings
 test/
   calculator_test.dart   <- ทดสอบตามตัวอย่างที่ยืนยัน

@@ -110,63 +110,6 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SectionCard(
-            title: 'ซิงก์คลาวด์ (Firebase)',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SwitchListTile(
-                  contentPadding: EdgeInsets.zero,
-                  title: const Text('เปิดซิงก์'),
-                  subtitle: Text(
-                    state.syncConfigured
-                        ? 'ข้อมูลซิงก์ผ่าน Firebase'
-                        : 'ยังไม่ได้เชื่อม Firebase → เก็บในเครื่องก่อน',
-                  ),
-                  value: state.syncEnabled,
-                  onChanged: (value) => state.updateSetting(
-                    settingSyncEnabled,
-                    value.toString(),
-                  ),
-                ),
-                if (state.syncEnabled && !state.syncConfigured)
-                  const Padding(
-                    padding: EdgeInsets.only(bottom: 8),
-                    child: Text(
-                      'หากต้องการซิงก์: รัน flutterfire configure แล้วส่ง '
-                      'FirebaseSyncService เข้า BillandarApp ใน main.dart',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ),
-                OutlinedButton.icon(
-                  onPressed: () async {
-                    if (!state.syncEnabled || !state.syncConfigured) {
-                      showMessage(context, 'ยังไม่ได้เปิดซิงก์คลาวด์');
-                      return;
-                    }
-                    await state.syncNow();
-                    if (context.mounted) {
-                      showMessage(
-                        context,
-                        state.error ?? 'ซิงก์ข้อมูลเสร็จแล้ว',
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.cloud_sync_outlined),
-                  label: const Text('ซิงก์ตอนนี้'),
-                ),
-                if (state.lastSyncAt != null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'ล่าสุด: ${state.lastSyncAt}',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          SectionCard(
             title: 'อัปเดตแอพ (ไม่เสียเงิน)',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

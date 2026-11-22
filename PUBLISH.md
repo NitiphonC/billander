@@ -50,6 +50,8 @@
 
 ## ข้อควรรู้
 
+- แอพบังคับ `https` สำหรับที่อยู่ `update.json` และอนุญาต `apkUrl` เฉพาะ `https://github.com` เท่านั้น (ป้องกัน manifest/APK ถูกปลอม) — ถ้า host ไฟล์ไว้ที่อื่น ระบบจะไม่โหลด
+
 - Release APK ที่ build ตอนนี้ยังเซ็นด้วย **debug key** (เพราะ `build.gradle.kts` ตั้งไว้) — ติดตั้ง/อัปเดตผ่าน APK ตรงได้ปกติ แต่ถ้าจะขึ้น Play ต้องสร้าง upload keystore เพิ่ม
 - Flutter 3.50 แจ้งเตือนว่า `package_info_plus` ยังใช้ Kotlin Gradle Plugin แบบเก่า (build ผ่าน แต่เวอร์ชัน Flutter อนาคตอาจต้องอัปเกรดแพ็กเกจ)
 

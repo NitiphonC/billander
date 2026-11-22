@@ -27,8 +27,8 @@ class UpdateService {
     final trimmed = url.trim();
     if (trimmed.isEmpty) return null;
     final uri = Uri.tryParse(trimmed);
-    if (uri == null || !uri.hasScheme ||
-        (uri.scheme != 'http' && uri.scheme != 'https')) {
+    // ความปลอดภัย: รับเฉพาะ HTTPS เพื่อไม่ให้ manifest ถูกดักฟัง/ปลอมแปลง
+    if (uri == null || uri.scheme != 'https' || uri.host.isEmpty) {
       return null;
     }
 
@@ -45,6 +45,13 @@ class UpdateService {
 
     final apkUrl = (decoded['apkUrl'] ?? '').toString();
     if (apkUrl.isEmpty) return null;
+    // อนุญาตเฉพาะลิงก์ HTTPS บน github.com (แหล่งที่ผู้ใช้ตั้งค่าเอง)
+    final apkUri = Uri.tryParse(apkUrl);
+    if (apkUri == null ||
+        apkUri.scheme != 'https' ||
+        !(apkUri.host == 'github.com' || apkUri.host.endsWith('.github.com'))) {
+      return null;
+    }
 
     return UpdateInfo(
       versionCode: remoteCode,
@@ -58,7 +65,11 @@ class UpdateService {
   /// (ไม่ต้องขอสิทธิ์ REQUEST_INSTALL_PACKAGES ในแอพ)
   Future<bool> openDownload(String apkUrl) async {
     final uri = Uri.tryParse(apkUrl);
-    if (uri == null) return false;
+    if (uri == null ||
+        uri.scheme != 'https' ||
+        !(uri.host == 'github.com' || uri.host.endsWith('.github.com'))) {
+      return false;
+    }
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }

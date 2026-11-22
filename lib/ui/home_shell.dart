@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../services/sync_service.dart';
 import '../state/app_state.dart';
 import 'bills_screen.dart';
 import 'calendar_screen.dart';
@@ -10,9 +9,7 @@ import 'settings_screen.dart';
 import 'widgets/common.dart';
 
 class HomeShell extends StatefulWidget {
-  const HomeShell({super.key, this.sync});
-
-  final SyncService? sync;
+  const HomeShell({super.key});
 
   @override
   State<HomeShell> createState() => _HomeShellState();
@@ -34,7 +31,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    state = AppState(sync: widget.sync);
+    state = AppState();
     state.load();
   }
 

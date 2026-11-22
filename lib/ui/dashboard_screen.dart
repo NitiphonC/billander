@@ -43,24 +43,19 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 IconButton.filledTonal(
-                  tooltip: 'ซิงก์ข้อมูลขึ้นคลาวด์',
+                  tooltip: 'ตรวจสอบอัปเดต',
                   onPressed: () async {
-                    if (!state.syncEnabled || !state.syncConfigured) {
-                      showMessage(
-                        context,
-                        'ยังไม่ได้เปิดซิงก์คลาวด์ — ไปที่แท็บตั้งค่าเพื่อเปิด',
-                      );
-                      return;
-                    }
-                    await state.syncNow();
+                    await state.checkForUpdate(force: true);
                     if (context.mounted) {
                       showMessage(
                         context,
-                        state.error ?? 'ซิงก์ข้อมูลเสร็จแล้ว',
+                        state.availableUpdate == null
+                            ? 'เป็นเวอร์ชันล่าสุดแล้ว'
+                            : 'พบเวอร์ชันใหม่ ${state.availableUpdate!.versionName}',
                       );
                     }
                   },
-                  icon: const Icon(Icons.sync),
+                  icon: const Icon(Icons.refresh),
                 ),
               ],
             ),
