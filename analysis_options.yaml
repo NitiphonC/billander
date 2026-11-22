@@ -1,0 +1,16 @@
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - ios/**
+    - web/**
+  errors:
+    # Flutter 3.50 ประกาศ deprecated material.dart แต่ยังไม่มีแพ็กเกจแทนที่ใน SDK
+    deprecated_member_use: ignore
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    prefer_single_quotes: true
+    sort_child_properties_last: true
+    avoid_print: true

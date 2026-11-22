@@ -1,0 +1,48 @@
+name: billandar
+description: แอพเก็บเงินรายวันเพื่อจ่ายบิลตามวันจ่ายแบบกองกลางเดียว
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+  sqflite: ^2.3.3+1
+  path_provider: ^2.1.3
+  path: ^1.9.0
+  intl: ^0.19.0
+  flutter_local_notifications: ^17.2.2
+  timezone: ^0.9.4
+  firebase_core: ^2.27.0
+  cloud_firestore: ^4.17.0
+  firebase_auth: ^4.20.0
+  package_info_plus: ^8.0.0
+  http: ^1.2.2
+  url_launcher: ^6.3.0
+  shared_preferences: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  integration_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/fonts/OFL.txt
+  fonts:
+    - family: Prompt
+      fonts:
+        - asset: assets/fonts/Prompt-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Prompt-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Prompt-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Prompt-Bold.ttf
+          weight: 700
