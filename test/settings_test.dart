@@ -496,7 +496,8 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('จ่าย ฿'), findsWidgets);
+    // ลิมิต 1 วัน + ไม่มีเงินในคลัง → เก็บ ฿100 + จ่าย ฿100 = ฿200 รวมกัน
+    expect(find.text('฿200.00'), findsWidgets);
   });
 
   testWidgets('SET-17 หน้าตั้งค่าโชว์ยอดคลังตัวเดียวกับหน้าภาพรวม',

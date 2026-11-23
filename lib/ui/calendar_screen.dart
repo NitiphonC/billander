@@ -214,24 +214,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 color: isToday ? theme.colorScheme.primary : null,
               ),
             ),
-            if (!isPast && dailySatang > 0)
-              Text(
-                Money.formatCompact(dailySatang),
-                style: TextStyle(
-                  fontSize: 9,
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
+            if (!isPast) ...[
+              // วันจ่ายนับเป็นวันเก็บ → ยอดที่โชว์ = เก็บ + จ่าย ที่ซ้อนกันอยู่
+              if (dailySatang + paymentSatang > 0)
+                Text(
+                  Money.formatCompact(dailySatang + paymentSatang),
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: paymentSatang > 0
+                        ? theme.colorScheme.error
+                        : theme.colorScheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            if (!isPast && paymentSatang > 0)
-              Text(
-                'จ่าย ${Money.formatCompact(paymentSatang)}',
-                style: const TextStyle(
-                  fontSize: 8,
-                  color: Colors.red,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              if (paymentSatang > 0)
+                const Icon(Icons.payments_outlined, size: 10, color: Colors.red),
+            ],
             if (isPast) ...[
               if (hasPaidBill)
                 const Icon(Icons.check_circle, size: 11, color: Colors.green),
@@ -274,6 +272,33 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                   ),
                   const SizedBox(height: 12),
+                  if (!date.isBefore(widget.state.today)) ...[
+                    () {
+                      final save = _dailyByDate[dateKey(date)] ?? 0;
+                      final pay = bills
+                          .where((b) => !b.isPaid)
+                          .fold<int>(0, (sum, b) => sum + b.amountSatang);
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          save + pay > 0
+                              ? 'รวมวันนี้ ${Money.format(save + pay)}'
+                                  ' (เก็บ ${Money.format(save)}'
+                                  ' + จ่าย ${Money.format(pay)})'
+                              : 'วันนี้ไม่ต้องเก็บ/จ่าย',
+                          style: Theme.of(sheetContext)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                color: Theme.of(sheetContext)
+                                    .colorScheme
+                                    .primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      );
+                    }(),
+                  ],
                   if (!date.isBefore(widget.state.today) &&
                       (_dailyByDate[dateKey(date)] ?? 0) > 0)
                     Padding(
