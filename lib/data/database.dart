@@ -18,7 +18,7 @@ class AppDatabase {
     final path = p.join(dir.path, 'billandar.db');
     final opened = await openDatabase(
       path,
-      version: 3,
+      version: 4,
       onCreate: (db, _) async {
         await db.execute('''
           CREATE TABLE bills (
@@ -31,6 +31,7 @@ class AppDatabase {
             repeat_times INTEGER,
             occurrence_index INTEGER NOT NULL DEFAULT 0,
             save_ahead_months INTEGER,
+            save_ahead_unit TEXT,
             recurring INTEGER NOT NULL DEFAULT 0,
             series_id TEXT,
             paid_at TEXT,
@@ -76,6 +77,9 @@ class AppDatabase {
         }
         if (oldVersion < 3) {
           await db.execute('ALTER TABLE bills ADD COLUMN save_ahead_months INTEGER');
+        }
+        if (oldVersion < 4) {
+          await db.execute('ALTER TABLE bills ADD COLUMN save_ahead_unit TEXT');
         }
       },
     );

@@ -261,6 +261,81 @@ void main() {
     expect(s.plan.isFullyCovered, isTrue);
   });
 
+  test('SET-18 หน่วยวัน: ลิมิต 10 วัน', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '10');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    expect(s.defaultSaveAheadUnit, SaveAheadUnit.days);
+
+    await s.addBill(
+      title: 'ใกล้',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 5)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    await s.addBill(
+      title: 'ไกล',
+      amountSatang: 20000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 20)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    expect(s.plan.bills.length, 1);
+    expect(s.plan.bills.single.bill.title, 'ใกล้');
+    expect(s.plan.excludedCount, 1);
+  });
+
+  test('SET-19 หน่วยปี: ลิมิต 1 ปีครอบบิล 6 เดือน', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.years.name);
+    await s.addBill(
+      title: 'ครึ่งปี',
+      amountSatang: 100000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 180)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    expect(s.plan.bills.length, 1);
+  });
+
+  test('SET-20 ลิมิตแยกบิลเป็นวัน แม้ค่าตั้งต้นเป็นเดือน', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.addBill(
+      title: 'บิลแยก',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23).add(const Duration(days: 20)),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      saveAheadMonths: 30,
+      saveAheadUnit: SaveAheadUnit.days,
+    );
+    expect(s.plan.bills.length, 1);
+  });
+
+  test('SET-21 หน่วยของลิมิตแยกบิลอยู่รอดหลัง reload', () async {
+    final first = await state();
+    await first.addBill(
+      title: 'บิลแยก',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 24),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      saveAheadMonths: 2,
+      saveAheadUnit: SaveAheadUnit.years,
+    );
+    final second = await state();
+    expect(second.bills.single.saveAheadMonths, 2);
+    expect(second.bills.single.saveAheadUnit, SaveAheadUnit.years);
+  });
+
   testWidgets('SET-17 หน้าตั้งค่าโชว์ยอดคลังตัวเดียวกับหน้าภาพรวม',
       (tester) async {
     final s = await state();

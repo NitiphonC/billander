@@ -3,6 +3,7 @@
 const String settingUpdateUrl = 'update_url';
 const String settingLastUpdateCheck = 'last_update_check';
 const String settingDefaultSaveAheadMonths = 'default_save_ahead_months';
+const String settingDefaultSaveAheadUnit = 'default_save_ahead_unit';
 
 /// ตัวอย่าง:
 /// https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/update.json

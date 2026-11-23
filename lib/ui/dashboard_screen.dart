@@ -163,7 +163,8 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'ลิมิตเก็บล่วงหน้า ${state.defaultSaveAheadMonths} เดือน'
+            'ลิมิตเก็บล่วงหน้า ${state.defaultSaveAheadMonths} '
+            '${state.defaultSaveAheadUnit.label}'
             '${plan.excludedCount > 0 ? ' · มี ${plan.excludedCount} บิลรอนอกช่วง' : ''}',
             style: const TextStyle(color: Colors.white70, fontSize: 11),
           ),
@@ -325,6 +326,7 @@ class _DailyPlanCardState extends State<_DailyPlanCard> {
       today: widget.state.today,
       maxDays: 60,
       defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
+      defaultSaveAheadUnit: widget.state.defaultSaveAheadUnit,
     );
     final visible = _expanded ? days : days.take(7).toList();
 

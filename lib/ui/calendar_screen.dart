@@ -51,6 +51,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       today: widget.state.today,
       maxDays: 120,
       defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
+      defaultSaveAheadUnit: widget.state.defaultSaveAheadUnit,
     );
     final dailyByDate = {
       for (final item in projection) dateKey(item.date): item.requiredSatang,

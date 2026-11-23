@@ -2,6 +2,25 @@ import '../core/date_utils.dart';
 
 enum RepeatUnit { none, week, month }
 
+/// ลิมิตเก็บล่วงหน้า: นับเป็นวัน / เดือน / ปี
+enum SaveAheadUnit { days, months, years }
+
+extension SaveAheadUnitX on SaveAheadUnit {
+  String get storageName => name;
+
+  String get label => switch (this) {
+        SaveAheadUnit.days => 'วัน',
+        SaveAheadUnit.months => 'เดือน',
+        SaveAheadUnit.years => 'ปี',
+      };
+
+  static SaveAheadUnit fromStorage(String? value) =>
+      SaveAheadUnit.values.firstWhere(
+        (e) => e.name == value,
+        orElse: () => SaveAheadUnit.months,
+      );
+}
+
 extension RepeatUnitX on RepeatUnit {
   String get storageName => name;
 
@@ -32,8 +51,10 @@ class Bill {
   final int? repeatTimes;
   /// ลำดับที่ของรอบนี้ในชุด (เริ่มที่ 0)
   final int occurrenceIndex;
-  /// ลิมิตเก็บล่วงหน้าของบิลนี้ (เดือน); null = ใช้ค่าตั้งต้นของแอพ
+  /// ค่าลิมิตเก็บล่วงหน้าของบิลนี้; null = ใช้ค่าตั้งต้นของแอพ
   final int? saveAheadMonths;
+  /// หน่วยของค่าลิมิต; null = เดือน (ข้อมูลเก่า) หรือตามค่าตั้งต้น
+  final SaveAheadUnit? saveAheadUnit;
 
   final String? seriesId;
   final DateTime? paidAt;
@@ -50,6 +71,7 @@ class Bill {
     this.repeatTimes,
     this.occurrenceIndex = 0,
     this.saveAheadMonths,
+    this.saveAheadUnit,
     this.seriesId,
     this.paidAt,
     required this.createdAtMs,
@@ -74,6 +96,8 @@ class Bill {
     int? occurrenceIndex,
     int? saveAheadMonths,
     bool clearSaveAheadMonths = false,
+    SaveAheadUnit? saveAheadUnit,
+    bool clearSaveAheadUnit = false,
     String? seriesId,
     bool clearSeriesId = false,
     DateTime? paidAt,
@@ -94,6 +118,9 @@ class Bill {
       saveAheadMonths: clearSaveAheadMonths
           ? null
           : (saveAheadMonths ?? this.saveAheadMonths),
+      saveAheadUnit: clearSaveAheadUnit
+          ? null
+          : (saveAheadUnit ?? this.saveAheadUnit),
       seriesId: clearSeriesId ? null : (seriesId ?? this.seriesId),
       paidAt: clearPaidAt ? null : (paidAt ?? this.paidAt),
       createdAtMs: createdAtMs ?? this.createdAtMs,
@@ -111,6 +138,7 @@ class Bill {
         'repeat_times': repeatTimes,
         'occurrence_index': occurrenceIndex,
         'save_ahead_months': saveAheadMonths,
+        'save_ahead_unit': saveAheadUnit?.storageName,
         // เก็บ field เก่าไว้เพื่อความเข้ากันได้
         'recurring': isRecurring ? 1 : 0,
         'series_id': seriesId,
@@ -134,6 +162,9 @@ class Bill {
       repeatTimes: (map['repeat_times'] as num?)?.toInt(),
       occurrenceIndex: (map['occurrence_index'] as num?)?.toInt() ?? 0,
       saveAheadMonths: (map['save_ahead_months'] as num?)?.toInt(),
+      saveAheadUnit: map.containsKey('save_ahead_unit')
+          ? SaveAheadUnitX.fromStorage(map['save_ahead_unit'] as String?)
+          : null,
       seriesId: map['series_id'] as String?,
       paidAt:
           map['paid_at'] == null ? null : parseIso(map['paid_at'] as String),

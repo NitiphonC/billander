@@ -86,6 +86,7 @@ class Calculator {
     required DateTime today,
     int maxDays = 90,
     int defaultSaveAheadMonths = 1,
+    SaveAheadUnit defaultSaveAheadUnit = SaveAheadUnit.months,
   }) {
     var balance = poolSatang;
     final pending = bills
@@ -124,6 +125,7 @@ class Calculator {
         poolSatang: balance,
         today: cursor,
         defaultSaveAheadMonths: defaultSaveAheadMonths,
+        defaultSaveAheadUnit: defaultSaveAheadUnit,
       );
       result.add(ProjectionDay(
         date: cursor,
@@ -142,21 +144,41 @@ class Calculator {
   ///   3) n = วันจ่าย - วันนี้ + 1  (นับรวมสองวัน; ถ้าเลยกำหนดแล้ว n = 1)
   ///   4) ต้องเก็บ/วันของบิล = ceil(ส่วนที่เหลือ / n)
   ///   5) ยอดที่โชว์ = ผลบวกของทุกบิล
+  /// คำนวณวันสิ้นสุดช่วงเก็บล่วงหน้าตามหน่วยที่เลือก
+  static DateTime saveAheadHorizon(
+    DateTime today,
+    int value,
+    SaveAheadUnit unit,
+  ) {
+    final n = value < 1 ? 1 : value;
+    switch (unit) {
+      case SaveAheadUnit.days:
+        return dateOnly(today).add(Duration(days: n));
+      case SaveAheadUnit.months:
+        return addMonthsClamped(today, n);
+      case SaveAheadUnit.years:
+        return addMonthsClamped(today, n * 12);
+    }
+  }
+
   static SavingsPlan calculate({
     required List<Bill> bills,
     required int poolSatang,
     required DateTime today,
     int defaultSaveAheadMonths = 1,
+    SaveAheadUnit defaultSaveAheadUnit = SaveAheadUnit.months,
   }) {
     final t = dateOnly(today);
 
     // กรองบิลที่ยังอยู่นอกช่วงเก็บล่วงหน้า (default หรือกำหนดแยกต่อบิล)
     final unpaid = bills.where((b) => !b.isPaid).toList();
     final active = unpaid.where((bill) {
-      final months = bill.saveAheadMonths ?? defaultSaveAheadMonths;
-      final limit = months < 1 ? 1 : months;
-      final horizon = addMonthsClamped(t, limit);
-      return !bill.dueDate.isAfter(horizon);
+      final value = bill.saveAheadMonths ?? defaultSaveAheadMonths;
+      final unit = bill.saveAheadUnit ??
+          (bill.saveAheadMonths != null
+              ? SaveAheadUnit.months
+              : defaultSaveAheadUnit);
+      return !bill.dueDate.isAfter(saveAheadHorizon(t, value, unit));
     }).toList()
       ..sort((a, b) {
         final byDue = a.dueDate.compareTo(b.dueDate);

@@ -234,6 +234,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
   late RepeatUnit _repeatUnit;
   late bool _forever;
   late bool _useDefaultAhead;
+  late SaveAheadUnit _saveAheadUnit;
   bool _applyToFuture = false;
   String? _saveError;
   final _formKey = GlobalKey<FormState>();
@@ -255,6 +256,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
     );
     _forever = bill?.repeatTimes == null;
     _useDefaultAhead = bill?.saveAheadMonths == null;
+    _saveAheadUnit = bill?.saveAheadUnit ?? widget.state.defaultSaveAheadUnit;
     _aheadController = TextEditingController(
       text: (bill?.saveAheadMonths ?? widget.state.defaultSaveAheadMonths)
           .toString(),
@@ -308,6 +310,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         repeatEvery: every < 1 ? 1 : every,
         repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
         saveAheadMonths: ahead,
+        saveAheadUnit: _useDefaultAhead ? null : _saveAheadUnit,
       );
     } else {
       await widget.state.updateBill(
@@ -319,6 +322,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         repeatEvery: every < 1 ? 1 : every,
         repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
         saveAheadMonths: ahead,
+        saveAheadUnit: _useDefaultAhead ? null : _saveAheadUnit,
         applyToFuture: _applyToFuture,
       );
     }
@@ -464,25 +468,41 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             title: const Text('ใช้ค่าตั้งต้นการเก็บล่วงหน้า'),
             subtitle: Text(
               _useDefaultAhead
-                  ? 'บิลนี้จะใช้ ${widget.state.defaultSaveAheadMonths} เดือน '
-                      '(ตามค่าตั้งต้น)'
+                  ? 'บิลนี้จะใช้ ${widget.state.defaultSaveAheadMonths} '
+                      '${widget.state.defaultSaveAheadUnit.label} (ตามค่าตั้งต้น)'
                   : 'บิลนี้ใช้ค่าที่ตั้งแยก ไม่ตามค่าตั้งต้น '
-                      '(${widget.state.defaultSaveAheadMonths} เดือน)',
+                      '(${widget.state.defaultSaveAheadMonths} '
+                      '${widget.state.defaultSaveAheadUnit.label})',
             ),
             value: _useDefaultAhead,
             onChanged: (v) => setState(() => _useDefaultAhead = v),
           ),
           if (!_useDefaultAhead) ...[
+            DropdownButtonFormField<SaveAheadUnit>(
+              initialValue: _saveAheadUnit,
+              decoration: const InputDecoration(
+                labelText: 'หน่วยของลิมิต',
+                border: OutlineInputBorder(),
+              ),
+              items: SaveAheadUnit.values
+                  .map((u) =>
+                      DropdownMenuItem(value: u, child: Text(u.label)))
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _saveAheadUnit = v);
+              },
+            ),
+            const SizedBox(height: 12),
             TextFormField(
               controller: _aheadController,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'บิลนี้เก็บล่วงหน้าได้กี่เดือน',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: 'บิลนี้เก็บล่วงหน้าได้กี่${_saveAheadUnit.label}',
+                border: const OutlineInputBorder(),
               ),
               validator: (v) {
                 final n = int.tryParse(v ?? '');
-                if (n == null || n < 1) return 'ต้องอย่างน้อย 1 เดือน';
+                if (n == null || n < 1) return 'ต้องอย่างน้อย 1';
                 return null;
               },
             ),

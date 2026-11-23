@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_config.dart';
 import '../core/money.dart';
 import '../data/database.dart';
+import '../models/bill.dart';
 import '../state/app_state.dart';
 import 'widgets/common.dart';
 
@@ -88,7 +89,8 @@ class SettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'ค่าตั้งต้น: ${state.defaultSaveAheadMonths} เดือน',
+                  'ค่าตั้งต้น: ${state.defaultSaveAheadMonths} '
+                  '${state.defaultSaveAheadUnit.label}',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.primary,
@@ -103,26 +105,25 @@ class SettingsScreen extends StatelessWidget {
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () async {
-                    final value = await showTextDialog(
+                    final result = await showSaveAheadDialog(
                       context,
-                      title: 'เก็บล่วงหน้าได้กี่เดือน',
-                      initialValue: state.defaultSaveAheadMonths.toString(),
-                      label: 'จำนวนเดือน',
+                      initialValue: state.defaultSaveAheadMonths,
+                      initialUnit: state.defaultSaveAheadUnit,
                     );
-                    if (value == null) return;
-                    final months = int.tryParse(value.trim());
-                    if (months == null || months < 1) {
-                      if (context.mounted) {
-                        showMessage(context, 'กรอกจำนวนเดือนให้ถูกต้อง');
-                      }
-                      return;
-                    }
+                    if (result == null) return;
                     await state.updateSetting(
                       settingDefaultSaveAheadMonths,
-                      months.toString(),
+                      result.value.toString(),
+                    );
+                    await state.updateSetting(
+                      settingDefaultSaveAheadUnit,
+                      result.unit.storageName,
                     );
                     if (context.mounted) {
-                      showMessage(context, 'ตั้งค่าลิมิตเป็น $months เดือนแล้ว');
+                      showMessage(
+                        context,
+                        'ตั้งค่าลิมิตเป็น ${result.value} ${result.unit.label}แล้ว',
+                      );
                     }
                   },
                   icon: const Icon(Icons.date_range),
@@ -142,7 +143,10 @@ class SettingsScreen extends StatelessWidget {
                           const Icon(Icons.tune, size: 14),
                           const SizedBox(width: 6),
                           Expanded(child: Text(bill.title)),
-                          Text('${bill.saveAheadMonths} เดือน'),
+                          Text(
+                            '${bill.saveAheadMonths} '
+                            '${(bill.saveAheadUnit ?? SaveAheadUnit.months).label}',
+                          ),
                         ],
                       ),
                     ),

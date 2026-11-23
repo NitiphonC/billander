@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/money.dart';
+import '../../models/bill.dart';
 
 class SectionCard extends StatelessWidget {
   const SectionCard({
@@ -206,6 +207,113 @@ class _TextDialogState extends State<_TextDialog> {
         ),
         FilledButton(
           onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: const Text('บันทึก'),
+        ),
+      ],
+    );
+  }
+}
+
+/// เลือกหน่วย + จำนวนสำหรับลิมิตเก็บล่วงหน้า
+Future<({int value, SaveAheadUnit unit})?> showSaveAheadDialog(
+  BuildContext context, {
+  required int initialValue,
+  required SaveAheadUnit initialUnit,
+}) {
+  return showDialog<({int value, SaveAheadUnit unit})>(
+    context: context,
+    builder: (_) => _SaveAheadDialog(
+      initialValue: initialValue,
+      initialUnit: initialUnit,
+    ),
+  );
+}
+
+class _SaveAheadDialog extends StatefulWidget {
+  const _SaveAheadDialog({
+    required this.initialValue,
+    required this.initialUnit,
+  });
+
+  final int initialValue;
+  final SaveAheadUnit initialUnit;
+
+  @override
+  State<_SaveAheadDialog> createState() => _SaveAheadDialogState();
+}
+
+class _SaveAheadDialogState extends State<_SaveAheadDialog> {
+  late final TextEditingController _controller;
+  late SaveAheadUnit _unit;
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialValue.toString());
+    _unit = widget.initialUnit;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('ลิมิตเก็บล่วงหน้า'),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            DropdownButtonFormField<SaveAheadUnit>(
+              initialValue: _unit,
+              decoration: const InputDecoration(
+                labelText: 'หน่วย',
+                border: OutlineInputBorder(),
+              ),
+              items: SaveAheadUnit.values
+                  .map((u) =>
+                      DropdownMenuItem(value: u, child: Text(u.label)))
+                  .toList(),
+              onChanged: (v) {
+                if (v != null) setState(() => _unit = v);
+              },
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'จำนวน${_unit.label}',
+                border: const OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final n = int.tryParse(v?.trim() ?? '');
+                if (n == null || n < 1) return 'ต้องอย่างน้อย 1';
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('ยกเลิก'),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (!_formKey.currentState!.validate()) return;
+            Navigator.pop(
+              context,
+              (value: int.parse(_controller.text.trim()), unit: _unit),
+            );
+          },
           child: const Text('บันทึก'),
         ),
       ],
