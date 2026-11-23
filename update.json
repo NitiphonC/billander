@@ -1,6 +1,6 @@
 {
-  "versionCode": 13,
-  "versionName": "0.1.12",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.12/app-arm64-v8a-release.apk",
-  "notes": "ปฏิทินใช้คลังจริง ไม่สะสม/จ่ายบิลแบบจำลอง + กดวันดูรายการบิลที่มารวมเป็นยอดรายวันได้"
+  "versionCode": 14,
+  "versionName": "0.1.13",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.13/app-arm64-v8a-release.apk",
+  "notes": "แก้บิลที่ไม่ได้ตั้งลิมิตแยกให้ใช้ค่าตั้งต้นจริง (ก่อนหน้านี้กลายเป็นเดือน) — ลิมิต 1 วันโชว์ยอดเฉพาะวันจ่าย"
 }
