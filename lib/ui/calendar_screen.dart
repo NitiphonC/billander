@@ -21,6 +21,7 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _month;
   Map<String, int> _dailyByDate = {};
+  Map<String, List<ProjectionContribution>> _breakdownByDate = {};
 
   @override
   void initState() {
@@ -59,6 +60,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
       for (final item in projection) dateKey(item.date): item.requiredSatang,
     };
     _dailyByDate = dailyByDate;
+    _breakdownByDate = {
+      for (final item in projection)
+        dateKey(item.date): item.contributions,
+    };
     final entriesByDay = <String, List<LedgerEntry>>{};
     for (final entry in widget.state.entriesForMonth(_month)) {
       (entriesByDay[dateKey(entry.date)] ??= <LedgerEntry>[]).add(entry);
@@ -235,6 +240,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   void _showDayDetails(BuildContext context, DateTime date, List<Bill> bills) {
     final entries = widget.state.entriesForDate(date);
+    final contributions =
+        _breakdownByDate[dateKey(date)] ?? const <ProjectionContribution>[];
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -269,6 +276,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                       ),
                     ),
+                  if (!date.isBefore(widget.state.today) &&
+                      contributions.isNotEmpty) ...[
+                    Text(
+                      'ยอดที่ต้องเก็บวันนี้มาจาก',
+                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 4),
+                    for (final item in contributions)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.subdirectory_arrow_right, size: 14),
+                            const SizedBox(width: 6),
+                            Expanded(child: Text(item.title)),
+                            Text(Money.format(item.amountSatang)),
+                          ],
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Text(
+                        'รวม ${Money.format(_dailyByDate[dateKey(date)] ?? 0)}',
+                        style: TextStyle(
+                          color: Theme.of(sheetContext).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const Divider(),
+                  ],
                   Text('บิลวันนี้',
                       style: Theme.of(sheetContext).textTheme.titleMedium),
                   if (bills.isEmpty) const Text('ไม่มีบิล'),

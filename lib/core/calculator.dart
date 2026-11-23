@@ -64,16 +64,32 @@ class SavingsPlan {
   }
 }
 
+/// ส่วนของยอดรายวันที่มาจากบิลใบหนึ่ง
+class ProjectionContribution {
+  final String billId;
+  final String title;
+  final int amountSatang;
+
+  const ProjectionContribution({
+    required this.billId,
+    required this.title,
+    required this.amountSatang,
+  });
+}
+
 /// แนวโน้มการเก็บรายวัน ถ้าผู้ใช้เก็บตามยอดที่แนะนำทุกวัน
 class ProjectionDay {
   final DateTime date;
   final int requiredSatang;
   final List<String> paidBillTitles;
+  /// รายการบิลที่มารวมเป็น [requiredSatang]
+  final List<ProjectionContribution> contributions;
 
   const ProjectionDay({
     required this.date,
     required this.requiredSatang,
     required this.paidBillTitles,
+    required this.contributions,
   });
 }
 
@@ -133,6 +149,14 @@ class Calculator {
         date: cursor,
         requiredSatang: plan.dailyRequiredSatang,
         paidBillTitles: paidTitles,
+        contributions: [
+          for (final item in plan.bills)
+            ProjectionContribution(
+              billId: item.bill.id,
+              title: item.bill.title,
+              amountSatang: item.perDaySatang,
+            ),
+        ],
       ));
       balance += plan.dailyRequiredSatang;
       cursor = cursor.add(const Duration(days: 1));

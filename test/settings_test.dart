@@ -515,6 +515,44 @@ void main() {
     expect(s.plan.bills.single.bill.title, 'บิลยาว');
   });
 
+  test('SET-29 รายการย่อยบอกว่ายอดรายวันมาจากบิลไหน', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    for (final item in [
+      ('ก', 10000),
+      ('ข', 15000),
+    ]) {
+      await s.addBill(
+        title: item.$1,
+        amountSatang: item.$2,
+        dueDate: DateTime(2026, 11, 29),
+        repeatUnit: RepeatUnit.none,
+        repeatEvery: 1,
+        repeatTimes: null,
+      );
+    }
+    final projection = Calculator.project(
+      bills: s.bills,
+      poolSatang: 0,
+      today: DateTime(2026, 11, 23),
+      maxDays: 10,
+      defaultSaveAheadMonths: 1,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+      applyPoolCoverage: false,
+    );
+    final day29 = projection.firstWhere((d) => dateKey(d.date) == '2026-11-29');
+    expect(day29.contributions.length, 2);
+    expect(
+      day29.contributions.map((c) => c.title).toSet(),
+      {'ก', 'ข'},
+    );
+    expect(
+      day29.contributions.fold<int>(0, (sum, c) => sum + c.amountSatang),
+      day29.requiredSatang,
+    );
+  });
+
   testWidgets('SET-25 ปฏิทินโชว์ยอดบิลที่ต้องจ่ายในวันนั้น', (tester) async {
     final s = await state();
     addTearDown(s.dispose);
