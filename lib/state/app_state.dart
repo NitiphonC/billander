@@ -484,19 +484,25 @@ class AppState extends ChangeNotifier {
     await _commit();
   }
 
-  Future<void> setInitialBalance(int amountSatang) async {
+  /// ตั้งยอดในคลังโดยตรง (ตัวเลขเดียวกับหน้าภาพรวม)
+  /// ทำโดยปรับส่วน "เงินตั้งต้น" ด้วยผลต่าง เพื่อไม่ให้กระทบรายการเก็บ/ใช้/จ่ายเดิม
+  Future<void> setPoolBalance(int targetSatang) async {
     final now = DateTime.now().millisecondsSinceEpoch;
+    final delta = targetSatang - poolSatang;
     final current = initialEntry;
     final entry = current == null
         ? LedgerEntry(
             id: newId(),
             type: LedgerType.initial,
-            amountSatang: amountSatang,
+            amountSatang: targetSatang,
             date: _today,
             createdAtMs: now,
             updatedAtMs: now,
           )
-        : current.copyWith(amountSatang: amountSatang, updatedAtMs: now);
+        : current.copyWith(
+            amountSatang: current.amountSatang + delta,
+            updatedAtMs: now,
+          );
     await _db.upsertEntry(entry);
     if (current == null) {
       _entries = [..._entries, entry];

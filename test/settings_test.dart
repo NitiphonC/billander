@@ -1,7 +1,9 @@
 import 'package:billandar/core/app_config.dart';
+import 'package:billandar/core/money.dart';
 import 'package:billandar/data/database.dart';
 import 'package:billandar/data/storage.dart';
 import 'package:billandar/models/bill.dart';
+import 'package:billandar/models/ledger_entry.dart';
 import 'package:billandar/state/app_state.dart';
 import 'package:billandar/ui/bills_screen.dart';
 import 'package:billandar/ui/settings_screen.dart';
@@ -216,6 +218,66 @@ void main() {
     expect(find.textContaining('บิลนี้ใช้ค่าที่ตั้งแยก'), findsOneWidget);
     expect(find.text('4'), findsWidgets);
     expect(find.text('กลับไปใช้ค่าตั้งต้น'), findsOneWidget);
+  });
+
+  test('SET-14 ปรับเงินในคลัง → ตัวเลขตรงกับที่ตั้ง และไม่ลบรายการเดิม', () async {
+    final s = await state();
+    await s.recordDeposit(50000);
+    await s.recordWithdrawal(20000);
+    expect(s.poolSatang, 30000);
+    final entriesBefore = s.entries.length;
+
+    await s.setPoolBalance(150000);
+
+    expect(s.poolSatang, 150000);
+    expect(s.entries.length, entriesBefore);
+    expect(s.entries.where((e) => e.type == LedgerType.deposit).length, 1);
+    expect(s.entries.where((e) => e.type == LedgerType.withdrawal).length, 1);
+  });
+
+  test('SET-15 ปรับคลังแล้วเปิดแอพใหม่ → ยอดยังเท่าเดิม', () async {
+    final first = await state();
+    await first.setPoolBalance(123456);
+    final second = await state();
+    expect(second.poolSatang, 123456);
+  });
+
+  test('SET-16 ปรับคลังให้พอจ่ายบิล → dailyRequired เป็น 0', () async {
+    final s = await state();
+    await s.addBill(
+      title: 'ค่าเช่า',
+      amountSatang: 50000,
+      dueDate: DateTime(2026, 11, 24),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    // วันนี้ 23 → จ่าย 24 = 2 วัน (รวมวันนี้) → 50000/2 = 25000/วัน
+    expect(s.plan.dailyRequiredSatang, 25000);
+
+    await s.setPoolBalance(50000);
+
+    expect(s.plan.dailyRequiredSatang, 0);
+    expect(s.plan.isFullyCovered, isTrue);
+  });
+
+  testWidgets('SET-17 หน้าตั้งค่าโชว์ยอดคลังตัวเดียวกับหน้าภาพรวม',
+      (tester) async {
+    final s = await state();
+    addTearDown(s.dispose);
+    await s.recordDeposit(75000);
+
+    await tester.pumpWidget(MaterialApp(
+      home: AnimatedBuilder(
+        animation: s,
+        builder: (_, __) => SettingsScreen(state: s),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text(Money.format(s.poolSatang)), findsOneWidget);
+    expect(find.text('ปรับเงินในคลัง'), findsOneWidget);
+    expect(find.textContaining('ปรับเงินตั้งต้น'), findsNothing);
   });
 }
 

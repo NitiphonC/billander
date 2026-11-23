@@ -297,7 +297,7 @@ class DashboardScreen extends StatelessWidget {
           context,
           'เงินในคลังไม่พอ (มี ${Money.format(state.poolSatang)} / '
           'ต้อง ${Money.format(bill.amountSatang)}) '
-          'ปรับเงินตั้งต้นได้ในแท็บตั้งค่า',
+          'ปรับเงินในคลังได้ในแท็บตั้งค่า',
         );
       case PaymentResult.notFound:
         break;

@@ -11,19 +11,18 @@ class SettingsScreen extends StatelessWidget {
 
   final AppState state;
 
-  Future<void> _editInitialBalance(BuildContext context) async {
+  Future<void> _editPoolBalance(BuildContext context) async {
     final amount = await showAmountDialog(
       context,
-      title: 'ปรับเงินตั้งต้นในคลัง',
-      initialValue: Money.toBaht(state.initialEntry?.amountSatang ?? 0)
-          .toStringAsFixed(2),
+      title: 'ปรับเงินในคลัง',
+      initialValue: Money.toBaht(state.poolSatang).toStringAsFixed(2),
       confirmLabel: 'บันทึก',
       allowZero: true,
     );
     if (amount == null || !context.mounted) return;
-    await state.setInitialBalance(amount);
+    await state.setPoolBalance(amount);
     if (context.mounted) {
-      showMessage(context, 'เงินตั้งต้นตอนนี้ ${Money.format(state.poolSatang)}');
+      showMessage(context, 'เงินในคลังตอนนี้ ${Money.format(state.poolSatang)}');
     }
   }
 
@@ -61,7 +60,7 @@ class SettingsScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  Money.format(state.initialEntry?.amountSatang ?? 0),
+                  Money.format(state.poolSatang),
                   style: theme.textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: theme.colorScheme.primary,
@@ -69,14 +68,15 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'เงินตั้งต้น + เก็บ − ใช้ − จ่าย = เงินในคลัง\n'
-                  'ปรับได้เมื่อต้องการเติม/ลดเงินในคลังเอง',
+                  'ตัวเลขนี้ตรงกับ "ในคลัง" ในหน้าภาพรวม\n'
+                  'แก้ได้ที่นี่เพื่อเติม/ลดเงินในคลังโดยตรง '
+                  '(รายการเก็บ/ใช้/จ่ายเดิมยังอยู่ครบ)',
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
-                  onPressed: () => _editInitialBalance(context),
+                  onPressed: () => _editPoolBalance(context),
                   icon: const Icon(Icons.edit_outlined),
-                  label: const Text('ปรับเงินตั้งต้น'),
+                  label: const Text('ปรับเงินในคลัง'),
                 ),
               ],
             ),
