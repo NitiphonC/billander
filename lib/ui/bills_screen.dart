@@ -92,6 +92,29 @@ class BillsScreen extends StatelessWidget {
         ' (รอบที่ ${bill.occurrenceIndex + 1})';
   }
 
+  String _saveAheadLabel(Bill bill) {
+    final value = bill.saveAheadMonths ?? state.defaultSaveAheadMonths;
+    final unit = bill.saveAheadUnit ??
+        (bill.saveAheadMonths != null
+            ? SaveAheadUnit.months
+            : state.defaultSaveAheadUnit);
+
+    // ใช้จำนวนวันจาก plan ถ้าบิลอยู่ในช่วงเก็บ (นับรวมวันจ่าย)
+    //ไม่อยู่ในช่วงก็คำนวณตรง ๆ จากวันนี้ถึงวันจ่าย
+    int days = 0;
+    for (final item in state.plan.bills) {
+      if (item.bill.id == bill.id) {
+        days = item.daysRemaining;
+        break;
+      }
+    }
+    if (days == 0) {
+      final diff = bill.dueDate.difference(state.today).inDays;
+      days = diff < 0 ? 0 : diff + 1;
+    }
+    return ' · เก็บล่วงหน้า $value ${unit.label} · เหลืออีก $days วัน';
+  }
+
   Widget _billTile(BuildContext context, Bill bill) {
     final isOverdue = bill.dueDate.isBefore(state.today);
     return ListTile(
@@ -103,6 +126,7 @@ class BillsScreen extends StatelessWidget {
       subtitle: Text(
         '${formatDateThai(bill.dueDate)}'
         '${_repeatLabel(bill)}'
+        '${_saveAheadLabel(bill)}'
         '${isOverdue ? ' · เลยกำหนด' : ''}',
       ),
       trailing: SizedBox(

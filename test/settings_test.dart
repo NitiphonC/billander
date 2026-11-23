@@ -1,4 +1,5 @@
 import 'package:billandar/core/app_config.dart';
+import 'package:billandar/core/calculator.dart';
 import 'package:billandar/core/money.dart';
 import 'package:billandar/data/database.dart';
 import 'package:billandar/data/storage.dart';
@@ -334,6 +335,84 @@ void main() {
     final second = await state();
     expect(second.bills.single.saveAheadMonths, 2);
     expect(second.bills.single.saveAheadUnit, SaveAheadUnit.years);
+  });
+
+  test('SET-22 วันจ่ายนับเป็นวันเก็บด้วย (ลิมิต 1 วัน → 2 วัน)', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    await s.addBill(
+      title: 'พรุ่งนี้จ่าย',
+      amountSatang: 20000,
+      dueDate: DateTime(2026, 11, 24),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+
+    expect(s.plan.bills.length, 1);
+    expect(s.plan.bills.single.daysRemaining, 2); // 23 + 24
+    expect(s.plan.bills.single.perDaySatang, 10000);
+  });
+
+  test('SET-23 วันก่อนจ่ายบิลเข้าช่วงแล้ว n=2 (ลิมิต 1 วัน)', () async {
+    final s = await state();
+    await s.addBill(
+      title: 'อีก 2 วันจ่าย',
+      amountSatang: 30000,
+      dueDate: DateTime(2026, 11, 25),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+
+    // วันที่ 23 → ยังอยู่นอกช่วง (due 25 > horizon 24)
+    final far = Calculator.calculate(
+      bills: s.bills,
+      poolSatang: s.poolSatang,
+      today: DateTime(2026, 11, 23),
+      defaultSaveAheadMonths: 1,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+    );
+    expect(far.bills, isEmpty);
+
+    // วันที่ 24 → เข้าช่วง และนับวันที่ 24 + 25 = 2 วัน
+    final near = Calculator.calculate(
+      bills: s.bills,
+      poolSatang: s.poolSatang,
+      today: DateTime(2026, 11, 24),
+      defaultSaveAheadMonths: 1,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+    );
+    expect(near.bills.length, 1);
+    expect(near.bills.single.daysRemaining, 2);
+    expect(near.bills.single.perDaySatang, 15000);
+  });
+
+  testWidgets('SET-24 แท็บบิลโชว์ลิมิตและจำนวนวันที่เหลือ', (tester) async {
+    final s = await state();
+    addTearDown(s.dispose);
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    await s.addBill(
+      title: 'บิลทดสอบ',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 24),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: AnimatedBuilder(
+        animation: s,
+        builder: (_, __) => BillsScreen(state: s),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('เก็บล่วงหน้า 1 วัน'), findsOneWidget);
+    expect(find.textContaining('เหลืออีก 2 วัน'), findsOneWidget);
   });
 
   testWidgets('SET-17 หน้าตั้งค่าโชว์ยอดคลังตัวเดียวกับหน้าภาพรวม',

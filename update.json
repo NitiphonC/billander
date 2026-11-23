@@ -1,6 +1,6 @@
 {
-  "versionCode": 6,
-  "versionName": "0.1.5",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.5/app-arm64-v8a-release.apk",
-  "notes": "ลิมิตเก็บล่วงหน้าเลือกหน่วยได้ วัน/เดือน/ปี ทั้งแบบตั้งต้นและแยกบิล ( migrate ข้อมูลเก่าอัตโนมัติ )"
+  "versionCode": 7,
+  "versionName": "0.1.6",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.6/app-arm64-v8a-release.apk",
+  "notes": "วันจ่ายนับเป็นวันเก็บ (ลิมิต 1 วัน = 2 วัน) + แท็บบิลโชว์ลิมิตและจำนวนวันที่เหลือ"
 }
