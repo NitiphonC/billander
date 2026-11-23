@@ -463,12 +463,16 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             contentPadding: EdgeInsets.zero,
             title: const Text('ใช้ค่าตั้งต้นการเก็บล่วงหน้า'),
             subtitle: Text(
-              'ตอนนี้ ${widget.state.defaultSaveAheadMonths} เดือน',
+              _useDefaultAhead
+                  ? 'บิลนี้จะใช้ ${widget.state.defaultSaveAheadMonths} เดือน '
+                      '(ตามค่าตั้งต้น)'
+                  : 'บิลนี้ใช้ค่าที่ตั้งแยก ไม่ตามค่าตั้งต้น '
+                      '(${widget.state.defaultSaveAheadMonths} เดือน)',
             ),
             value: _useDefaultAhead,
             onChanged: (v) => setState(() => _useDefaultAhead = v),
           ),
-          if (!_useDefaultAhead)
+          if (!_useDefaultAhead) ...[
             TextFormField(
               controller: _aheadController,
               keyboardType: TextInputType.number,
@@ -482,6 +486,19 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 return null;
               },
             ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => setState(() {
+                  _useDefaultAhead = true;
+                  _aheadController.text =
+                      widget.state.defaultSaveAheadMonths.toString();
+                }),
+                icon: const Icon(Icons.restore, size: 16),
+                label: const Text('กลับไปใช้ค่าตั้งต้น'),
+              ),
+            ),
+          ],
           if (widget.bill != null && widget.bill!.isRecurring)
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

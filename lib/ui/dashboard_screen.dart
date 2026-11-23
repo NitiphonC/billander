@@ -161,7 +161,13 @@ class DashboardScreen extends StatelessWidget {
             plan.note ?? '',
             style: const TextStyle(color: Colors.white70),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 4),
+          Text(
+            'ลิมิตเก็บล่วงหน้า ${state.defaultSaveAheadMonths} เดือน'
+            '${plan.excludedCount > 0 ? ' · มี ${plan.excludedCount} บิลรอนอกช่วง' : ''}',
+            style: const TextStyle(color: Colors.white70, fontSize: 11),
+          ),
+          const SizedBox(height: 12),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(

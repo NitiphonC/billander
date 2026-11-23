@@ -42,6 +42,8 @@ class SettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final finalOverrides =
+        state.bills.where((b) => b.saveAheadMonths != null).toList();
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
@@ -108,7 +110,7 @@ class SettingsScreen extends StatelessWidget {
                       label: 'จำนวนเดือน',
                     );
                     if (value == null) return;
-                    final months = int.tryParse(value);
+                    final months = int.tryParse(value.trim());
                     if (months == null || months < 1) {
                       if (context.mounted) {
                         showMessage(context, 'กรอกจำนวนเดือนให้ถูกต้อง');
@@ -119,10 +121,39 @@ class SettingsScreen extends StatelessWidget {
                       settingDefaultSaveAheadMonths,
                       months.toString(),
                     );
+                    if (context.mounted) {
+                      showMessage(context, 'ตั้งค่าลิมิตเป็น $months เดือนแล้ว');
+                    }
                   },
                   icon: const Icon(Icons.date_range),
                   label: const Text('เปลี่ยนค่าตั้งต้น'),
                 ),
+                if (finalOverrides.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    'บิลที่ตั้งแยกไว้ (ไม่ตามค่าตั้งต้น)',
+                    style: theme.textTheme.labelLarge,
+                  ),
+                  for (final bill in finalOverrides)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.tune, size: 14),
+                          const SizedBox(width: 6),
+                          Expanded(child: Text(bill.title)),
+                          Text('${bill.saveAheadMonths} เดือน'),
+                        ],
+                      ),
+                    ),
+                ] else
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Text(
+                      'ยังไม่มีบิลที่ตั้งแยก — ทุกบิลใช้ค่าตั้งต้น',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
               ],
             ),
           ),

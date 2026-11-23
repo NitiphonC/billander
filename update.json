@@ -1,6 +1,6 @@
 {
-  "versionCode": 3,
-  "versionName": "0.1.2",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.2/app-arm64-v8a-release.apk",
-  "notes": "ตั้งลิมิตเก็บล่วงหน้าได้ทั้งแบบตั้งต้นและแยกบิล + ปฏิทินโชว์ยอดรายวันและแก้บิลได้ตรงนั้น"
+  "versionCode": 4,
+  "versionName": "0.1.3",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.3/app-arm64-v8a-release.apk",
+  "notes": "แยกแสดงค่าตั้งต้น/ค่าแยกบิลให้ชัด + เพิ่มปุ่มกลับไปใช้ค่าตั้งต้น + แสดงลิมิตที่ใช้จริงหน้าภาพรวม"
 }
