@@ -185,7 +185,9 @@ class Bill {
       repeatTimes: (map['repeat_times'] as num?)?.toInt(),
       occurrenceIndex: (map['occurrence_index'] as num?)?.toInt() ?? 0,
       saveAheadMonths: (map['save_ahead_months'] as num?)?.toInt(),
-      saveAheadUnit: map.containsKey('save_ahead_unit')
+      // ค่า null ใน storage หมายถึง "ใช้ค่าตั้งต้น" — ต้องไม่แปลงเป็น months
+      // (fromStorage(null) คืน months ทำให้บิลที่ไม่ได้ตั้งแยกไปทับค่าตั้งต้น)
+      saveAheadUnit: map['save_ahead_unit'] != null
           ? SaveAheadUnitX.fromStorage(map['save_ahead_unit'] as String?)
           : null,
       iconText: map['icon_text'] as String?,

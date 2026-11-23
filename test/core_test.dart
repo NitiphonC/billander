@@ -1,3 +1,4 @@
+import 'package:billandar/core/calculator.dart';
 import 'package:billandar/core/date_utils.dart';
 import 'package:billandar/core/money.dart';
 import 'package:billandar/models/bill.dart';
@@ -107,6 +108,33 @@ void main() {
       expect(restored.isPaid, isTrue);
       expect(restored.createdAtMs, 100);
       expect(restored.updatedAtMs, 200);
+    });
+
+    test('CORE-15 save_ahead_unit null แปลว่าใช้ค่าตั้งต้น ไม่ใช่ months', () {
+      final map = Bill(
+        id: 'b-null-unit',
+        title: 'บิลใช้ค่าตั้งต้น',
+        amountSatang: 10000,
+        dueDate: DateTime(2026, 11, 29),
+        repeatUnit: RepeatUnit.none,
+        repeatEvery: 1,
+        repeatTimes: null,
+        createdAtMs: 1,
+        updatedAtMs: 1,
+      ).toMap();
+      expect(map['save_ahead_unit'], isNull);
+      final restored = Bill.fromMap(map);
+      expect(restored.saveAheadMonths, isNull);
+      expect(restored.saveAheadUnit, isNull);
+
+      final plan = Calculator.calculate(
+        bills: [restored],
+        poolSatang: 0,
+        today: DateTime(2026, 11, 23),
+        defaultSaveAheadMonths: 1,
+        defaultSaveAheadUnit: SaveAheadUnit.days,
+      );
+      expect(plan.bills, isEmpty);
     });
 
     test('CORE-14 LedgerEntry', () {
