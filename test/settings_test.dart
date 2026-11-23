@@ -498,12 +498,12 @@ void main() {
 
     final gross = Calculator.project(
       bills: s.bills,
-      poolSatang: 999999, // มีคลังมากก็ไม่ให้หักในมุมมองปฏิทิน
+      poolSatang: 0, // คลังจริงเป็น 0 → ต้องเห็นยอดเต็มของบิลวันที่ 29
       today: DateTime(2026, 11, 23),
       maxDays: 10,
       defaultSaveAheadMonths: 1,
       defaultSaveAheadUnit: SaveAheadUnit.days,
-      applyPoolCoverage: false,
+      simulateFutureSavings: false,
     );
     final day29 = gross.firstWhere((d) => dateKey(d.date) == '2026-11-29');
     // 250 (บิล 1 วัน) + 500 (บิลอื่น 2 วัน) = 750 ≥ 250
@@ -519,6 +519,17 @@ void main() {
     final s = await state();
     await s.updateSetting(settingDefaultSaveAheadMonths, '1');
     await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    // บิลนี้ทำให้โปรเจกชันสะสมยอดตั้งแต่วันที่ 23 (เคยทำให้บิล 29 หาย)
+    await s.addBill(
+      title: 'บิลสะสม',
+      amountSatang: 100000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      saveAheadMonths: 1,
+      saveAheadUnit: SaveAheadUnit.months,
+    );
     for (final item in [
       ('ก', 10000),
       ('ข', 15000),
@@ -539,14 +550,12 @@ void main() {
       maxDays: 10,
       defaultSaveAheadMonths: 1,
       defaultSaveAheadUnit: SaveAheadUnit.days,
-      applyPoolCoverage: false,
+      simulateFutureSavings: false,
     );
     final day29 = projection.firstWhere((d) => dateKey(d.date) == '2026-11-29');
-    expect(day29.contributions.length, 2);
-    expect(
-      day29.contributions.map((c) => c.title).toSet(),
-      {'ก', 'ข'},
-    );
+    final titles = day29.contributions.map((c) => c.title).toList();
+    expect(titles, contains('ก'));
+    expect(titles, contains('ข'));
     expect(
       day29.contributions.fold<int>(0, (sum, c) => sum + c.amountSatang),
       day29.requiredSatang,

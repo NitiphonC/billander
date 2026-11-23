@@ -103,7 +103,9 @@ class Calculator {
     int maxDays = 90,
     int defaultSaveAheadMonths = 1,
     SaveAheadUnit defaultSaveAheadUnit = SaveAheadUnit.months,
-    bool applyPoolCoverage = true,
+    /// true = จำลองเก็บทุกวัน (ใช้สำหรับ discharge plan)
+    /// false = ใช้ "คลังจริง" ทุกวัน ไม่สะสมเงินสมมติ (ใช้สำหรับปฏิทิน)
+    bool simulateFutureSavings = true,
   }) {
     var balance = poolSatang;
     final pending = bills
@@ -123,27 +125,29 @@ class Calculator {
           .where((b) => dateKey(b.dueDate) == dateKey(cursor))
           .toList();
       final paidIds = <String>{};
-      for (final bill in paidToday) {
-        if (balance >= bill.amountSatang) {
-          balance -= bill.amountSatang;
-          paidIds.add(bill.id);
+      if (simulateFutureSavings) {
+        // จำลองจ่ายอัตโนมัติเฉพาะโหมดนี้เท่านั้น
+        for (final bill in paidToday) {
+          if (balance >= bill.amountSatang) {
+            balance -= bill.amountSatang;
+            paidIds.add(bill.id);
+          }
+        }
+        if (paidIds.isNotEmpty) {
+          pending.removeWhere((b) => paidIds.contains(b.id));
         }
       }
       final paidTitles = paidToday
           .where((b) => paidIds.contains(b.id))
           .map((b) => b.title)
           .toList();
-      if (paidIds.isNotEmpty) {
-        pending.removeWhere((b) => paidIds.contains(b.id));
-      }
 
       final plan = calculate(
         bills: pending,
-        poolSatang: balance,
+        poolSatang: simulateFutureSavings ? balance : poolSatang,
         today: cursor,
         defaultSaveAheadMonths: defaultSaveAheadMonths,
         defaultSaveAheadUnit: defaultSaveAheadUnit,
-        applyPoolCoverage: applyPoolCoverage,
       );
       result.add(ProjectionDay(
         date: cursor,
@@ -158,7 +162,9 @@ class Calculator {
             ),
         ],
       ));
-      balance += plan.dailyRequiredSatang;
+      if (simulateFutureSavings) {
+        balance += plan.dailyRequiredSatang;
+      }
       cursor = cursor.add(const Duration(days: 1));
     }
     return result;
