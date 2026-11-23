@@ -337,7 +337,8 @@ void main() {
     expect(second.bills.single.saveAheadUnit, SaveAheadUnit.years);
   });
 
-  test('SET-22 วันจ่ายนับเป็นวันเก็บด้วย (ลิมิต 1 วัน → 2 วัน)', () async {
+  test('SET-22 ลิมิต 1 วัน = เฉพาะวันจ่าย (วันจ่ายนับเป็น 1 วันในลิมิต)',
+      () async {
     final s = await state();
     await s.updateSetting(settingDefaultSaveAheadMonths, '1');
     await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
@@ -350,43 +351,55 @@ void main() {
       repeatTimes: null,
     );
 
-    expect(s.plan.bills.length, 1);
-    expect(s.plan.bills.single.daysRemaining, 2); // 23 + 24
-    expect(s.plan.bills.single.perDaySatang, 10000);
-  });
+    // วันที่ 23 → ยังไม่เข้า (limit 1 → horizon = 23)
+    expect(s.plan.bills, isEmpty);
 
-  test('SET-23 วันก่อนจ่ายบิลเข้าช่วงแล้ว n=2 (ลิมิต 1 วัน)', () async {
-    final s = await state();
-    await s.addBill(
-      title: 'อีก 2 วันจ่าย',
-      amountSatang: 30000,
-      dueDate: DateTime(2026, 11, 25),
-      repeatUnit: RepeatUnit.none,
-      repeatEvery: 1,
-      repeatTimes: null,
-    );
-
-    // วันที่ 23 → ยังอยู่นอกช่วง (due 25 > horizon 24)
-    final far = Calculator.calculate(
-      bills: s.bills,
-      poolSatang: s.poolSatang,
-      today: DateTime(2026, 11, 23),
-      defaultSaveAheadMonths: 1,
-      defaultSaveAheadUnit: SaveAheadUnit.days,
-    );
-    expect(far.bills, isEmpty);
-
-    // วันที่ 24 → เข้าช่วง และนับวันที่ 24 + 25 = 2 วัน
-    final near = Calculator.calculate(
+    // วันที่ 24 = วันจ่าย → เข้า นับ 1 วัน เก็บเต็มยอด
+    final dueDay = Calculator.calculate(
       bills: s.bills,
       poolSatang: s.poolSatang,
       today: DateTime(2026, 11, 24),
       defaultSaveAheadMonths: 1,
       defaultSaveAheadUnit: SaveAheadUnit.days,
     );
+    expect(dueDay.bills.length, 1);
+    expect(dueDay.bills.single.daysRemaining, 1);
+    expect(dueDay.bills.single.perDaySatang, 20000);
+  });
+
+  test('SET-23 ลิมิต 7 วัน = วันจ่าย + อีก 6 วัน (ตั้ง 7 ได้ 7 วันพอดี)',
+      () async {
+    final s = await state();
+    await s.addBill(
+      title: 'อีก 7 วันจ่าย',
+      amountSatang: 70000,
+      dueDate: DateTime(2026, 11, 30),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+
+    // วันที่ 23 → horizon = 29 → ยังไม่เข้า
+    final far = Calculator.calculate(
+      bills: s.bills,
+      poolSatang: s.poolSatang,
+      today: DateTime(2026, 11, 23),
+      defaultSaveAheadMonths: 7,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+    );
+    expect(far.bills, isEmpty);
+
+    // วันที่ 24 → เข้าช่วง วันที่ 24..30 = 7 วัน
+    final near = Calculator.calculate(
+      bills: s.bills,
+      poolSatang: s.poolSatang,
+      today: DateTime(2026, 11, 24),
+      defaultSaveAheadMonths: 7,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+    );
     expect(near.bills.length, 1);
-    expect(near.bills.single.daysRemaining, 2);
-    expect(near.bills.single.perDaySatang, 15000);
+    expect(near.bills.single.daysRemaining, 7);
+    expect(near.bills.single.perDaySatang, 10000);
   });
 
   testWidgets('SET-24 แท็บบิลโชว์ลิมิตและจำนวนวันที่เหลือ', (tester) async {

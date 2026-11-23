@@ -153,7 +153,9 @@ class Calculator {
     final n = value < 1 ? 1 : value;
     switch (unit) {
       case SaveAheadUnit.days:
-        return dateOnly(today).add(Duration(days: n));
+        // วันจ่ายนับเป็น 1 วันในลิมิต → ตั้ง 7 วัน = วันจ่าย + อีก 6 วันก่อนหน้า
+        // (ถ้า +n ตรง ๆ จะได้ 8 วัน ต้องตั้ง 6 แทน ซึ่งไม่ตรงความต้องการ)
+        return dateOnly(today).add(Duration(days: n - 1));
       case SaveAheadUnit.months:
         return addMonthsClamped(today, n);
       case SaveAheadUnit.years:
