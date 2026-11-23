@@ -1,6 +1,6 @@
 {
-  "versionCode": 8,
-  "versionName": "0.1.7",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.7/app-arm64-v8a-release.apk",
-  "notes": "แก้ลิมิตหน่วยวัน: วันจ่ายนับเป็น 1 วันในลิมิต (ตั้ง 7 ได้ 7 วันพอดี ไม่ต้องตั้ง 6)"
+  "versionCode": 9,
+  "versionName": "0.1.8",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.8/app-arm64-v8a-release.apk",
+  "notes": "ปฏิทินโชว์ยอดบิลที่จ่ายในวันนั้น + ไอคอนบิลแต่งได้ (ตัวอักษร/สี/วาดเอง)"
 }

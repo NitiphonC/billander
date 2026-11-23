@@ -7,6 +7,7 @@ import 'package:billandar/models/bill.dart';
 import 'package:billandar/models/ledger_entry.dart';
 import 'package:billandar/state/app_state.dart';
 import 'package:billandar/ui/bills_screen.dart';
+import 'package:billandar/ui/calendar_screen.dart';
 import 'package:billandar/ui/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -426,6 +427,76 @@ void main() {
 
     expect(find.textContaining('เก็บล่วงหน้า 1 วัน'), findsOneWidget);
     expect(find.textContaining('เหลืออีก 2 วัน'), findsOneWidget);
+  });
+
+  test('SET-26 ไอคอนบิล (ตัวอักษร/สี/ภาพวาด) อยู่รอดหลัง reload', () async {
+    final first = await state();
+    await first.addBill(
+      title: 'ค่าเช่า',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 24),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      iconText: 'ร',
+      iconColor: 0xFFD32F2F,
+      iconDrawing: 'aW1hZ2U=',
+    );
+    final second = await state();
+    final bill = second.bills.single;
+    expect(bill.iconText, 'ร');
+    expect(bill.iconColor, 0xFFD32F2F);
+    expect(bill.iconDrawing, 'aW1hZ2U=');
+  });
+
+  testWidgets('SET-27 แท็บบิลโชว์ตัวอักษรในไอคอน', (tester) async {
+    final s = await state();
+    addTearDown(s.dispose);
+    await s.addBill(
+      title: 'ค่าเช่า',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 24),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      iconText: 'ร',
+      iconColor: 0xFFD32F2F,
+    );
+    await tester.pumpWidget(MaterialApp(
+      home: AnimatedBuilder(
+        animation: s,
+        builder: (_, __) => BillsScreen(state: s),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('ร'), findsWidgets);
+  });
+
+  testWidgets('SET-25 ปฏิทินโชว์ยอดบิลที่ต้องจ่ายในวันนั้น', (tester) async {
+    final s = await state();
+    addTearDown(s.dispose);
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    await s.addBill(
+      title: 'บิลวันนี้',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+
+    await tester.pumpWidget(MaterialApp(
+      home: Scaffold(
+        body: AnimatedBuilder(
+          animation: s,
+          builder: (_, __) => CalendarScreen(state: s),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('จ่าย ฿'), findsWidgets);
   });
 
   testWidgets('SET-17 หน้าตั้งค่าโชว์ยอดคลังตัวเดียวกับหน้าภาพรวม',

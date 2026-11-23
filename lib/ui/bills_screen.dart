@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../core/date_utils.dart';
 import '../core/money.dart';
+import 'icon_draw_screen.dart';
 import '../models/bill.dart';
 import '../state/app_state.dart';
+import 'widgets/bill_icon.dart';
 import 'widgets/common.dart';
 
 class BillsScreen extends StatelessWidget {
@@ -119,9 +121,7 @@ class BillsScreen extends StatelessWidget {
     final isOverdue = bill.dueDate.isBefore(state.today);
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: CircleAvatar(
-        child: Icon(bill.recurring ? Icons.repeat : Icons.receipt_long, size: 20),
-      ),
+      leading: BillIconBadge(bill: bill),
       title: Text(bill.title),
       subtitle: Text(
         '${formatDateThai(bill.dueDate)}'
@@ -254,6 +254,9 @@ class _BillEditorFormState extends State<_BillEditorForm> {
   late final TextEditingController _everyController;
   late final TextEditingController _timesController;
   late final TextEditingController _aheadController;
+  late final TextEditingController _iconTextController;
+  late int _iconColor;
+  String? _iconDrawing;
   late DateTime _dueDate;
   late RepeatUnit _repeatUnit;
   late bool _forever;
@@ -280,6 +283,10 @@ class _BillEditorFormState extends State<_BillEditorForm> {
     );
     _forever = bill?.repeatTimes == null;
     _useDefaultAhead = bill?.saveAheadMonths == null;
+    _iconTextController =
+        TextEditingController(text: bill?.iconText ?? '');
+    _iconColor = bill?.iconColor ?? 0xFF1F7A6C;
+    _iconDrawing = bill?.iconDrawing;
     _saveAheadUnit = bill?.saveAheadUnit ?? widget.state.defaultSaveAheadUnit;
     _aheadController = TextEditingController(
       text: (bill?.saveAheadMonths ?? widget.state.defaultSaveAheadMonths)
@@ -294,6 +301,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
     _everyController.dispose();
     _timesController.dispose();
     _aheadController.dispose();
+    _iconTextController.dispose();
     super.dispose();
   }
 
@@ -335,6 +343,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
         saveAheadMonths: ahead,
         saveAheadUnit: _useDefaultAhead ? null : _saveAheadUnit,
+        iconText: _iconTextController.text.trim().isEmpty
+            ? null
+            : _iconTextController.text.trim(),
+        iconColor: _iconColor,
+        iconDrawing: _iconDrawing,
       );
     } else {
       await widget.state.updateBill(
@@ -347,11 +360,29 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         repeatTimes: _repeatUnit == RepeatUnit.none ? null : times,
         saveAheadMonths: ahead,
         saveAheadUnit: _useDefaultAhead ? null : _saveAheadUnit,
+        iconText: _iconTextController.text.trim().isEmpty
+            ? null
+            : _iconTextController.text.trim(),
+        iconColor: _iconColor,
+        iconDrawing: _iconDrawing,
         applyToFuture: _applyToFuture,
       );
     }
     if (mounted) Navigator.pop(context);
   }
+
+  Bill _previewBill() => Bill(
+        id: 'preview',
+        title: _titleController.text,
+        amountSatang: 0,
+        dueDate: _dueDate,
+        iconText: _iconTextController.text.trim().isEmpty
+            ? null
+            : _iconTextController.text.trim(),
+        iconColor: _iconColor,
+        iconDrawing: _iconDrawing,
+        createdAtMs: 0,
+        updatedAtMs: 0);
 
   @override
   Widget build(BuildContext context) {
@@ -549,6 +580,84 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               title: const Text('ใช้กับรอบในอนาคตด้วย'),
               value: _applyToFuture,
               onChanged: (v) => setState(() => _applyToFuture = v),
+            ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              BillIconBadge(bill: _previewBill(), size: 56),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'ไอคอนบิล',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          TextFormField(
+            controller: _iconTextController,
+            maxLength: 3,
+            decoration: const InputDecoration(
+              labelText: 'ตัวอักษรในไอคอน (1–3 ตัว)',
+              border: OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 10,
+            children: [
+              for (final color in [
+                const Color(0xFF1F7A6C),
+                const Color(0xFF1976D2),
+                const Color(0xFFD32F2F),
+                const Color(0xFFF57C00),
+                const Color(0xFF7B1FA2),
+                const Color(0xFF388E3C),
+                const Color(0xFF424242),
+                const Color(0xFF00838F),
+              ])
+                GestureDetector(
+                  onTap: () => setState(() => _iconColor = color.value),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: color.value == _iconColor
+                          ? Border.all(color: Colors.black, width: 3)
+                          : null,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton.icon(
+              onPressed: () async {
+                final data = await Navigator.push<String>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const IconDrawScreen(),
+                  ),
+                );
+                if (data != null) setState(() => _iconDrawing = data);
+              },
+              icon: const Icon(Icons.draw),
+              label: Text(_iconDrawing == null ? 'วาดไอคอนเอง' : 'วาดใหม่'),
+            ),
+          ),
+          if (_iconDrawing != null)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton(
+                onPressed: () => setState(() => _iconDrawing = null),
+                child: const Text('ลบภาพวาด'),
+              ),
             ),
           const SizedBox(height: 8),
           FilledButton.icon(

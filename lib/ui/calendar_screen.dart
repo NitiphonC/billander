@@ -57,6 +57,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       for (final item in projection) dateKey(item.date): item.requiredSatang,
     };
     _dailyByDate = dailyByDate;
+
+    // ยอดบิลที่ต้องจ่ายในแต่ละวัน (โชว์เพิ่มจากยอดที่ต้องเก็บ)
+    final paymentByDate = <String, int>{};
+    for (final entry in billsByDate.entries) {
+      if (entry.value.any((b) => !b.isPaid)) {
+        paymentByDate[entry.key] = entry.value
+            .where((b) => !b.isPaid)
+            .fold<int>(0, (sum, b) => sum + b.amountSatang);
+      }
+    }
     final entriesByDay = <String, List<LedgerEntry>>{};
     for (final entry in widget.state.entriesForMonth(_month)) {
       (entriesByDay[dateKey(entry.date)] ??= <LedgerEntry>[]).add(entry);
@@ -131,6 +141,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 final hasUnpaid = dayBills.any((b) => !b.isPaid);
                 final isPast = date.isBefore(widget.state.today);
                 final dailySatang = dailyByDate[key] ?? 0;
+                final paymentSatang = paymentByDate[key] ?? 0;
                 final dayEntries = entriesByDay[key] ?? const <LedgerEntry>[];
 
                 return _dayCell(
@@ -139,6 +150,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   isToday: isToday,
                   isPast: isPast,
                   dailySatang: dailySatang,
+                  paymentSatang: paymentSatang,
                   hasBill: dayBills.isNotEmpty,
                   hasPaidBill: dayBills.any((b) => b.isPaid),
                   hasDeposit:
@@ -163,6 +175,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     required bool isToday,
     required bool isPast,
     required int dailySatang,
+    required int paymentSatang,
     required bool hasBill,
     required bool hasPaidBill,
     required bool hasDeposit,
@@ -207,6 +220,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 style: TextStyle(
                   fontSize: 9,
                   color: theme.colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            if (!isPast && paymentSatang > 0)
+              Text(
+                'จ่าย ${Money.formatCompact(paymentSatang)}',
+                style: const TextStyle(
+                  fontSize: 8,
+                  color: Colors.red,
                   fontWeight: FontWeight.w600,
                 ),
               ),

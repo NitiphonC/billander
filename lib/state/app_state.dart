@@ -297,6 +297,9 @@ class AppState extends ChangeNotifier {
             occurrenceIndex: index,
             saveAheadMonths: anchor.saveAheadMonths,
             saveAheadUnit: anchor.saveAheadUnit,
+            iconText: anchor.iconText,
+            iconColor: anchor.iconColor,
+            iconDrawing: anchor.iconDrawing,
             seriesId: group.key,
             createdAtMs: now,
             updatedAtMs: now,
@@ -319,6 +322,9 @@ class AppState extends ChangeNotifier {
     int? repeatTimes,
     int? saveAheadMonths,
     SaveAheadUnit? saveAheadUnit,
+    String? iconText,
+    int? iconColor,
+    String? iconDrawing,
   }) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final id = newId();
@@ -334,6 +340,9 @@ class AppState extends ChangeNotifier {
       saveAheadMonths:
           saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
       saveAheadUnit: saveAheadUnit,
+      iconText: iconText,
+      iconColor: iconColor,
+      iconDrawing: iconDrawing,
       seriesId: repeatUnit == RepeatUnit.none ? null : id,
       createdAtMs: now,
       updatedAtMs: now,
@@ -354,6 +363,9 @@ class AppState extends ChangeNotifier {
     int? repeatTimes,
     int? saveAheadMonths,
     SaveAheadUnit? saveAheadUnit,
+    String? iconText,
+    int? iconColor,
+    String? iconDrawing,
     required bool applyToFuture,
   }) async {
     final original = billById(billId);
@@ -407,6 +419,12 @@ class AppState extends ChangeNotifier {
         clearSaveAheadMonths: saveAheadMonths == null,
         saveAheadUnit: saveAheadUnit,
         clearSaveAheadUnit: saveAheadUnit == null,
+        iconText: iconText,
+        clearIconText: iconText == null,
+        iconColor: iconColor,
+        clearIconColor: iconColor == null,
+        iconDrawing: iconDrawing,
+        clearIconDrawing: iconDrawing == null,
         clearSeriesId: repeatUnit == RepeatUnit.none,
         updatedAtMs: now,
       );

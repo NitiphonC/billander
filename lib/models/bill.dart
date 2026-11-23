@@ -56,6 +56,13 @@ class Bill {
   /// หน่วยของค่าลิมิต; null = เดือน (ข้อมูลเก่า) หรือตามค่าตั้งต้น
   final SaveAheadUnit? saveAheadUnit;
 
+  /// ตัวอักษร/สัญลักษณ์ที่แสดงในไอคอนบิล (ไม่ใช้ emoji)
+  final String? iconText;
+  /// สีไอคอนแบบ ARGB เช่น 0xFF1F7A6C
+  final int? iconColor;
+  /// ภาพที่ผู้ใช้วาดเองแบบ base64 PNG (ถ้ามีจะแสดงแทน iconText)
+  final String? iconDrawing;
+
   final String? seriesId;
   final DateTime? paidAt;
   final int createdAtMs;
@@ -72,6 +79,9 @@ class Bill {
     this.occurrenceIndex = 0,
     this.saveAheadMonths,
     this.saveAheadUnit,
+    this.iconText,
+    this.iconColor,
+    this.iconDrawing,
     this.seriesId,
     this.paidAt,
     required this.createdAtMs,
@@ -98,6 +108,12 @@ class Bill {
     bool clearSaveAheadMonths = false,
     SaveAheadUnit? saveAheadUnit,
     bool clearSaveAheadUnit = false,
+    String? iconText,
+    bool clearIconText = false,
+    int? iconColor,
+    bool clearIconColor = false,
+    String? iconDrawing,
+    bool clearIconDrawing = false,
     String? seriesId,
     bool clearSeriesId = false,
     DateTime? paidAt,
@@ -121,6 +137,10 @@ class Bill {
       saveAheadUnit: clearSaveAheadUnit
           ? null
           : (saveAheadUnit ?? this.saveAheadUnit),
+      iconText: clearIconText ? null : (iconText ?? this.iconText),
+      iconColor: clearIconColor ? null : (iconColor ?? this.iconColor),
+      iconDrawing:
+          clearIconDrawing ? null : (iconDrawing ?? this.iconDrawing),
       seriesId: clearSeriesId ? null : (seriesId ?? this.seriesId),
       paidAt: clearPaidAt ? null : (paidAt ?? this.paidAt),
       createdAtMs: createdAtMs ?? this.createdAtMs,
@@ -139,6 +159,9 @@ class Bill {
         'occurrence_index': occurrenceIndex,
         'save_ahead_months': saveAheadMonths,
         'save_ahead_unit': saveAheadUnit?.storageName,
+        'icon_text': iconText,
+        'icon_color': iconColor,
+        'icon_drawing': iconDrawing,
         // เก็บ field เก่าไว้เพื่อความเข้ากันได้
         'recurring': isRecurring ? 1 : 0,
         'series_id': seriesId,
@@ -165,6 +188,9 @@ class Bill {
       saveAheadUnit: map.containsKey('save_ahead_unit')
           ? SaveAheadUnitX.fromStorage(map['save_ahead_unit'] as String?)
           : null,
+      iconText: map['icon_text'] as String?,
+      iconColor: (map['icon_color'] as num?)?.toInt(),
+      iconDrawing: map['icon_drawing'] as String?,
       seriesId: map['series_id'] as String?,
       paidAt:
           map['paid_at'] == null ? null : parseIso(map['paid_at'] as String),

@@ -5,6 +5,7 @@ import '../core/date_utils.dart';
 import '../core/money.dart';
 import '../models/bill.dart';
 import '../state/app_state.dart';
+import 'widgets/bill_icon.dart';
 import 'widgets/common.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -226,12 +227,7 @@ class DashboardScreen extends StatelessWidget {
         for (final item in plan.bills)
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: CircleAvatar(
-              child: Icon(
-                item.bill.recurring ? Icons.repeat : Icons.receipt_long,
-                size: 20,
-              ),
-            ),
+            leading: BillIconBadge(bill: item.bill),
             title: Text(item.bill.title),
             subtitle: Text(
               'จ่าย ${formatDateThai(item.bill.dueDate)} · '
