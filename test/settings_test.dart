@@ -496,8 +496,15 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // ลิมิต 1 วัน + ไม่มีเงินในคลัง → เก็บ ฿100 + จ่าย ฿100 = ฿200 รวมกัน
-    expect(find.text('฿200.00'), findsWidgets);
+    // ลิมิต 1 วัน + คลัง 0 → วันจ่ายคือวันเก็บ → โชว์แค่ "ยอดที่ต้องเก็บ" ฿100
+    expect(find.text('฿100.00'), findsWidgets);
+    expect(find.text('฿200.00'), findsNothing);
+
+    // ถ้าเก็บครบแล้ว → ยอดที่ต้องเก็บวันนั้นเป็น 0
+    await s.setPoolBalance(10000);
+    await tester.pumpAndSettle();
+    // เก็บครบแล้ว → ไม่ต้องเก็บเพิ่ม เซลล์ไม่โชว์ยอดเก็บอีก
+    expect(find.text('฿100.00'), findsNothing);
   });
 
   testWidgets('SET-17 หน้าตั้งค่าโชว์ยอดคลังตัวเดียวกับหน้าภาพรวม',

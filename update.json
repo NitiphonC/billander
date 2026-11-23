@@ -1,6 +1,6 @@
 {
-  "versionCode": 10,
-  "versionName": "0.1.9",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.9/app-arm64-v8a-release.apk",
-  "notes": "ปฏิทินโชว์ตัวเลขรวม (ยอดเก็บ + ยอดจ่ายที่ซ้อนในวันจ่าย) แทนการแยกสองบรรทัด"
+  "versionCode": 11,
+  "versionName": "0.1.10",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.10/app-arm64-v8a-release.apk",
+  "notes": "ปฏิทินโชว์เฉพาะยอดที่ต้องเก็บในวันนั้น (ลิมิต 1 วัน = ฿100 บนวันจ่าย, เก็บครบ = ไม่โชว์ยอด) — ถอดยอดจ่ายที่เพิ่มไปเมื่อ v0.1.9 ออก"
 }
