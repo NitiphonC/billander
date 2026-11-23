@@ -142,8 +142,13 @@ class Calculator {
           .map((b) => b.title)
           .toList();
 
+      // โหมดปฏิทิน: บิลที่เลยวันจ่ายไปแล้ว (เทียบกับวันที่กำลังดู) ไม่ต้องโชว์
+      // ยอดเก็บซ้ำอีก — มันควรโชว์แค่สัญลักษณ์ในวันที่ผ่านไปแล้วเท่านั้น
+      final billsForDay = simulateFutureSavings
+          ? pending
+          : pending.where((b) => !b.dueDate.isBefore(cursor)).toList();
       final plan = calculate(
-        bills: pending,
+        bills: billsForDay,
         poolSatang: simulateFutureSavings ? balance : poolSatang,
         today: cursor,
         defaultSaveAheadMonths: defaultSaveAheadMonths,

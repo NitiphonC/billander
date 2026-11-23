@@ -562,6 +562,50 @@ void main() {
     );
   });
 
+  test('SET-30 ลิมิต 1 วัน → ยอดเก็บและลิสต์ย่อยโชว์เฉพาะวันจ่าย', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    await s.addBill(
+      title: 'ต้นเดือน',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    await s.addBill(
+      title: 'ปลายเดือน',
+      amountSatang: 25000,
+      dueDate: DateTime(2026, 11, 29),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    final projection = Calculator.project(
+      bills: s.bills,
+      poolSatang: 0,
+      today: DateTime(2026, 11, 23),
+      maxDays: 10,
+      defaultSaveAheadMonths: 1,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+      simulateFutureSavings: false,
+    );
+    final byDate = {for (final d in projection) dateKey(d.date): d};
+
+    // วันที่ 23 = วันจ่ายของ "ต้นเดือน" → โชว์เฉพาะบิลนี้
+    expect(byDate['2026-11-23']!.contributions.map((c) => c.title), ['ต้นเดือน']);
+    // วันที่ 24–28 ไม่มีบิลจ่าย → ไม่ควรโชว์ยอดเก็บเลย
+    for (final day in ['24', '25', '26', '27', '28']) {
+      final d = byDate['2026-11-$day']!;
+      expect(d.requiredSatang, 0, reason: 'วันที่ $day ไม่ควรมียอดเก็บ');
+      expect(d.contributions, isEmpty);
+    }
+    // วันที่ 29 = วันจ่ายของ "ปลายเดือน" → โชว์เฉพาะบิลนี้ (บิลเก่าไม่ทับซ้อน)
+    expect(byDate['2026-11-29']!.contributions.map((c) => c.title), ['ปลายเดือน']);
+    expect(byDate['2026-11-29']!.requiredSatang, 25000);
+  });
+
   testWidgets('SET-25 ปฏิทินโชว์ยอดบิลที่ต้องจ่ายในวันนั้น', (tester) async {
     final s = await state();
     addTearDown(s.dispose);
