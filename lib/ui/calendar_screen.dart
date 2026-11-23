@@ -52,6 +52,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       maxDays: 120,
       defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
       defaultSaveAheadUnit: widget.state.defaultSaveAheadUnit,
+      // ปฏิทินโชว์ยอดที่แต่ละบิลขอเก็บในวันนั้น (ไม่หักเงินในคลัง)
+      applyPoolCoverage: false,
     );
     final dailyByDate = {
       for (final item in projection) dateKey(item.date): item.requiredSatang,

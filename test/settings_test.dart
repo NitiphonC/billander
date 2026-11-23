@@ -1,5 +1,6 @@
 import 'package:billandar/core/app_config.dart';
 import 'package:billandar/core/calculator.dart';
+import 'package:billandar/core/date_utils.dart';
 import 'package:billandar/core/money.dart';
 import 'package:billandar/data/database.dart';
 import 'package:billandar/data/storage.dart';
@@ -470,6 +471,48 @@ void main() {
     ));
     await tester.pumpAndSettle();
     expect(find.text('ร'), findsWidgets);
+  });
+
+  test('SET-28 ปฏิทินใช้ยอดรายวันก่อนหักคลัง (บิล luwng 1 วันต้องโชว์เต็ม)', () async {
+    final s = await state();
+    await s.updateSetting(settingDefaultSaveAheadMonths, '1');
+    await s.updateSetting(settingDefaultSaveAheadUnit, SaveAheadUnit.days.name);
+    await s.addBill(
+      title: 'บิล 29',
+      amountSatang: 25000,
+      dueDate: DateTime(2026, 11, 29),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+    );
+    await s.addBill(
+      title: 'บิลยาว',
+      amountSatang: 100000,
+      dueDate: DateTime(2026, 11, 30),
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      saveAheadMonths: 1,
+      saveAheadUnit: SaveAheadUnit.months,
+    );
+
+    final gross = Calculator.project(
+      bills: s.bills,
+      poolSatang: 999999, // มีคลังมากก็ไม่ให้หักในมุมมองปฏิทิน
+      today: DateTime(2026, 11, 23),
+      maxDays: 10,
+      defaultSaveAheadMonths: 1,
+      defaultSaveAheadUnit: SaveAheadUnit.days,
+      applyPoolCoverage: false,
+    );
+    final day29 = gross.firstWhere((d) => dateKey(d.date) == '2026-11-29');
+    // 250 (บิล 1 วัน) + 500 (บิลอื่น 2 วัน) = 750 ≥ 250
+    expect(day29.requiredSatang, greaterThanOrEqualTo(25000));
+
+    // หน้าภาพรวมยังหักคลังเหมือนเดิม (บิลลิมิต 1 วันยังไม่เข้า,
+    // แต่บิลลิมิต 1 เดือนเข้า → มียอดรายวันของบิลนั้น)
+    expect(s.plan.bills.length, 1);
+    expect(s.plan.bills.single.bill.title, 'บิลยาว');
   });
 
   testWidgets('SET-25 ปฏิทินโชว์ยอดบิลที่ต้องจ่ายในวันนั้น', (tester) async {

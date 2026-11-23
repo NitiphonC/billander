@@ -87,6 +87,7 @@ class Calculator {
     int maxDays = 90,
     int defaultSaveAheadMonths = 1,
     SaveAheadUnit defaultSaveAheadUnit = SaveAheadUnit.months,
+    bool applyPoolCoverage = true,
   }) {
     var balance = poolSatang;
     final pending = bills
@@ -126,6 +127,7 @@ class Calculator {
         today: cursor,
         defaultSaveAheadMonths: defaultSaveAheadMonths,
         defaultSaveAheadUnit: defaultSaveAheadUnit,
+        applyPoolCoverage: applyPoolCoverage,
       );
       result.add(ProjectionDay(
         date: cursor,
@@ -169,6 +171,7 @@ class Calculator {
     required DateTime today,
     int defaultSaveAheadMonths = 1,
     SaveAheadUnit defaultSaveAheadUnit = SaveAheadUnit.months,
+    bool applyPoolCoverage = true,
   }) {
     final t = dateOnly(today);
 
@@ -190,7 +193,9 @@ class Calculator {
         return a.id.compareTo(b.id);
       });
 
-    var available = poolSatang < 0 ? 0 : poolSatang;
+    // ปฏิทินต้องการ "ยอดที่แต่ละบิลขอเก็บในวันนั้น" แบบไม่หักคลัง
+    // (หน้าภาพรวมใช้ค่าตั้งต้น = true ตามกฎเดิม)
+    var available = applyPoolCoverage && poolSatang > 0 ? poolSatang : 0;
     var totalOutstanding = 0;
     var coveredTotal = 0;
     final plans = <BillPlan>[];
