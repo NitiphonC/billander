@@ -43,12 +43,11 @@ class DashboardScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton.filledTonal(
-                  tooltip: 'วิธีใช้แอป',
+                TextButton(
                   onPressed: () => _showHelp(context),
-                  icon: const Icon(Icons.help_outline),
+                  child: const Text('วิธีใช้'),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 4),
                 IconButton.filledTonal(
                   tooltip: 'ตรวจสอบอัปเดต',
                   onPressed: () async {

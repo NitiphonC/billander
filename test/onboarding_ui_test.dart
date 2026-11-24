@@ -30,7 +30,7 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('วิธีใช้แอป'));
+    await tester.tap(find.text('วิธีใช้'));
     await tester.pumpAndSettle();
 
     expect(find.text('วิธีใช้แอป'), findsOneWidget);
