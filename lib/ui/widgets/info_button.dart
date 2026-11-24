@@ -25,36 +25,39 @@ class AppInfoButton extends StatelessWidget {
       child: Semantics(
         button: true,
         label: 'อ่านเพิ่มเติม: $title',
-        child: SizedBox(
-          width: AppSpace.xl,
-          height: AppSpace.xl,
-          child: TextButton(
-            onPressed: () => showDialog<void>(
-              context: context,
-              builder: (dialogContext) => AlertDialog(
-                title: Text(title, style: AppType.title(dialogContext)),
-                content: SingleChildScrollView(
-                  child: Text(body, style: AppType.body(dialogContext)),
-                ),
-                actions: [
-                  FilledButton(
-                    onPressed: () => Navigator.pop(dialogContext),
-                    child: const Text('เข้าใจแล้ว'),
-                  ),
-                ],
+        // วงกลมโชว์แค่ xl (20px) แต่พื้นที่กดขยายเป็น 44px ให้แตะง่าย
+        child: InkWell(
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: Text(title, style: AppType.title(dialogContext)),
+              content: SingleChildScrollView(
+                child: Text(body, style: AppType.body(dialogContext)),
               ),
+              actions: [
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: const Text('เข้าใจแล้ว'),
+                ),
+              ],
             ),
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              minimumSize: const Size(AppSpace.xl, AppSpace.xl),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              shape: const CircleBorder(),
-              backgroundColor: colorScheme.surfaceContainerHigh,
-            ),
-            child: Text(
-              label,
-              style: AppType.label(context)
-                  .copyWith(color: colorScheme.primary),
+          ),
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpace.md),
+            child: Container(
+              width: AppSpace.xl,
+              height: AppSpace.xl,
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHigh,
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Text(
+                label,
+                style: AppType.label(context)
+                    .copyWith(color: colorScheme.primary),
+              ),
             ),
           ),
         ),
