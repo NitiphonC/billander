@@ -108,8 +108,13 @@ void main() {
         defaultSaveAheadUnit: SaveAheadUnit.days,
         simulateFutureSavings: false,
       );
-      for (final day in projection) {
+      // วันนี้ (26) ให้โชว์บิลเลยกำหนดเป็นยอดกู้คืน (ตรงภาพรวม)
+      expect(projection.first.contributions.map((c) => c.title), contains('เก่า'));
+      // แต่วันถัดไปห้ามโชว์ซ้ำ
+      for (final day in projection.skip(1)) {
         expect(day.contributions.map((c) => c.title), isNot(contains('เก่า')));
+      }
+      for (final day in projection) {
         expect(day.paidBillTitles, isEmpty);
       }
       final day30 = projection.firstWhere(

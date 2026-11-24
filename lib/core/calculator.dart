@@ -157,9 +157,10 @@ class Calculator {
           .map((b) => b.title)
           .toList();
 
-      // โหมดปฏิทิน: บิลที่เลยวันจ่ายไปแล้ว (เทียบกับวันที่กำลังดู) ไม่ต้องโชว์
-      // ยอดเก็บซ้ำอีก — มันควรโชว์แค่สัญลักษณ์ในวันที่ผ่านไปแล้วเท่านั้น
-      final billsForDay = simulateFutureSavings
+      // โหมดปฏิทิน: บิลที่เลยกำหนดให้โชว์ยอดกู้คืนได้ "เฉพาะวันนี้"
+      // (ตรงกับหน้าภาพรวม) ส่วนวันถัดไปเป็นอดีตของบิลนั้น → โชว์แค่สัญลักษณ์
+      final isFirstDay = dateKey(cursor) == dateKey(dateOnly(today));
+      final billsForDay = simulateFutureSavings || isFirstDay
           ? pending
           : pending.where((b) => !b.dueDate.isBefore(cursor)).toList();
       final adjustedBills = poolCoverage.isEmpty

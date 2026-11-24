@@ -1,6 +1,6 @@
 {
-  "versionCode": 15,
-  "versionName": "0.1.14",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.14/app-arm64-v8a-release.apk",
-  "notes": "แก้บัคบิลซ้ำ (ลบ/เปลี่ยนรอบแล้วคืนกลับ, รอบ 0 ซ้ำ, ลดจำนวนรอบไม่ตัด), แก้คลังหักซ้ำในปฏิทิน, แก้ข้อความบิลเลยกำหนด, ตรึงวันที่ในเทส"
+  "versionCode": 16,
+  "versionName": "0.1.15",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.15/app-arm64-v8a-release.apk",
+  "notes": "บิลเลยกำหนดโชว์ยอดกู้คืนในปฏิทินวันนี้ (ตรงกับหน้าภาพรวม) — รวมฟิกซ์ recurrence/cling ทั้งหมดจากรอบ audit"
 }
