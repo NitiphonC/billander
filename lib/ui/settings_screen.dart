@@ -69,9 +69,9 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'ตัวเลขนี้ตรงกับ "ในคลัง" ในหน้าภาพรวม\n'
-                  'แก้ได้ที่นี่เพื่อเติม/ลดเงินในคลังโดยตรง '
-                  '(รายการเก็บ/ใช้/จ่ายเดิมยังอยู่ครบ)',
+                  'เงินที่เก็บไว้แล้ว ตรงกับ "ในคลัง" ในหน้าภาพรวม\n'
+                  'กดปุ่มด้านล่างเพื่อแก้จำนวนเงินได้เลย '
+                  '(ประวัติเก็บ/ใช้/จ่ายเดิมยังอยู่ครบ)',
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
@@ -84,7 +84,7 @@ class SettingsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           SectionCard(
-            title: 'ลิมิตเก็บล่วงหน้า',
+            title: 'ระยะเก็บล่วงหน้า (ค่าตั้งต้น)',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -98,9 +98,11 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'บิลที่อยู่ไกลกว่าช่วงนี้จะยังไม่นำมาคำนวณยอดรายวัน '
-                  'ช่วยไม่ให้ยอดเก็บวันแรก ๆ สูงเกินไป '
-                  '(บางบิลตั้งแยกได้ในหน้าแก้บิล)',
+                  'แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
+                  '(นับวันจ่ายเป็น 1 วัน) — เช่น ตั้ง 1 วัน = โชว์ยอดเฉพาะวันจ่าย, '
+                  'ตั้ง 7 วัน = โชว์ 7 วันสุดท้ายก่อนจ่าย\n'
+                  'บิลที่อยู่ไกลกว่านี้ยังไม่นำมาเก็บ '
+                  '(ตั้งแยกได้ในหน้าแก้บิล)',
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(

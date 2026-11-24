@@ -399,6 +399,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                   fontWeight: FontWeight.bold,
                 ),
           ),
+          const SizedBox(height: 4),
+          const Text(
+            'บอกจำนวนเงิน วันที่จ่าย และความถี่ '
+            'แอปจะคำนวณเองว่าต้องเก็บวันละเท่าไหร่',
+          ),
           const SizedBox(height: 16),
           if (_saveError != null)
             Padding(
@@ -411,7 +416,8 @@ class _BillEditorFormState extends State<_BillEditorForm> {
           TextFormField(
             controller: _titleController,
             decoration: const InputDecoration(
-              labelText: 'ชื่อรายจ่าย',
+              labelText: 'ชื่อบิล',
+              hintText: 'เช่น ค่าเช่า, ค่าไฟ, ผ่อนมือถือ',
               border: OutlineInputBorder(),
             ),
             validator: (v) =>
@@ -423,6 +429,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             decoration: const InputDecoration(
               labelText: 'จำนวนเงิน (บาท)',
+              hintText: 'เช่น 250 หรือ 250.50',
               prefixText: '฿ ',
               border: OutlineInputBorder(),
             ),
@@ -442,16 +449,26 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 children: [
                   const Icon(Icons.calendar_today_outlined),
                   const SizedBox(width: 12),
-                  Text('วันจ่ายรอบแรก: ${formatDateThai(_dueDate)}'),
+                  Text(
+                    '${_repeatUnit == RepeatUnit.none
+                        ? 'วันที่ต้องจ่าย'
+                        : 'วันจ่ายรอบแรก'}: ${formatDateThai(_dueDate)}',
+                  ),
                 ],
               ),
             ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'แตะเพื่อเปลี่ยนวัน · วันจ่ายก็ถือเป็นวันเก็บด้วยเสมอ',
+            style: TextStyle(fontSize: 12),
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<RepeatUnit>(
             initialValue: _repeatUnit,
             decoration: const InputDecoration(
-              labelText: 'ทำซ้ำ',
+              labelText: 'บิลนี้จ่ายซ้ำไหม',
+              helperText: 'จ่ายครั้งเดียว → ไม่ซ้ำ · จ่ายทุกเดือน → ทุกเดือน',
               border: OutlineInputBorder(),
             ),
             items: RepeatUnit.values
@@ -492,7 +509,10 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             const SizedBox(height: 12),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('ไม่จำกัดจำนวนรอบ'),
+              title: const Text('จ่ายไปเรื่อย ๆ (ไม่มีรอบสุดท้าย)'),
+              subtitle: const Text(
+                'เปิด = สร้างบิลต่อไปเรื่อย ๆ (แสดงล่วงหน้า 1 ปี)',
+              ),
               value: _forever,
               onChanged: (v) => setState(() => _forever = v),
             ),
@@ -501,7 +521,8 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 controller: _timesController,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                  labelText: 'จำนวนรอบทั้งหมด (รวมรอบแรก)',
+                  labelText: 'จำนวนรอบทั้งหมด',
+                  helperText: 'เช่น 3 = จ่าย 3 รอบ (รอบนี้ + อีก 2 รอบ)',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) {
@@ -519,13 +540,20 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             ),
           ],
           const SizedBox(height: 12),
+          const Text(
+            'ระยะเก็บล่วงหน้า = แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหน '
+            '(นับวันจ่ายเป็น 1 วันด้วย)',
+            style: TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 8),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('ใช้ค่าตั้งต้นการเก็บล่วงหน้า'),
+            title: const Text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล'),
             subtitle: Text(
               _useDefaultAhead
-                  ? 'บิลนี้จะใช้ ${widget.state.defaultSaveAheadMonths} '
-                      '${widget.state.defaultSaveAheadUnit.label} (ตามค่าตั้งต้น)'
+                  ? 'เปิด = ใช้ค่าตั้งต้น ${widget.state.defaultSaveAheadMonths} '
+                      '${widget.state.defaultSaveAheadUnit.label}\n'
+                      'ปิด = ตั้งใหม่เฉพาะบิลนี้'
                   : 'บิลนี้ใช้ค่าที่ตั้งแยก ไม่ตามค่าตั้งต้น '
                       '(${widget.state.defaultSaveAheadMonths} '
                       '${widget.state.defaultSaveAheadUnit.label})',
@@ -537,7 +565,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             DropdownButtonFormField<SaveAheadUnit>(
               initialValue: _saveAheadUnit,
               decoration: const InputDecoration(
-                labelText: 'หน่วยของลิมิต',
+                labelText: 'หน่วย (วัน / เดือน / ปี)',
                 border: OutlineInputBorder(),
               ),
               items: SaveAheadUnit.values
@@ -553,7 +581,15 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               controller: _aheadController,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'บิลนี้เก็บล่วงหน้าได้กี่${_saveAheadUnit.label}',
+                labelText: 'เก็บกี่${_saveAheadUnit.label} (รวมวันจ่าย)',
+                helperText: switch (_saveAheadUnit) {
+                  SaveAheadUnit.days =>
+                    'ใส่ 1 = เฉพาะวันจ่าย · ใส่ 7 = วันจ่าย + อีก 6 วันก่อน',
+                  SaveAheadUnit.months =>
+                    'ใส่ 1 = เฉพาะเดือนที่จ่าย · ใส่ 2 = รวมเดือนก่อนหน้า',
+                  SaveAheadUnit.years =>
+                    'ใส่ 1 = เฉพาะปีที่จ่าย · ใส่ 2 = รวมปีก่อนหน้า',
+                },
                 border: const OutlineInputBorder(),
               ),
               validator: (v) {
@@ -579,6 +615,9 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('ใช้กับรอบในอนาคตด้วย'),
+              subtitle: const Text(
+                'เปิด = แก้รอบนี้และรอบที่ยังไม่จ่าย · ปิด = แก้เฉพาะรอบนี้',
+              ),
               value: _applyToFuture,
               onChanged: (v) => setState(() => _applyToFuture = v),
             ),
@@ -597,12 +636,18 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               ),
             ],
           ),
+          const SizedBox(height: 4),
+          const Text(
+            'ไม่บังคับ — ใส่ตัวอักษรหรือวาดรูปเพื่อจำบิลได้ง่ายขึ้น',
+            style: TextStyle(fontSize: 12),
+          ),
           const SizedBox(height: 8),
           TextFormField(
             controller: _iconTextController,
             maxLength: 3,
             decoration: const InputDecoration(
               labelText: 'ตัวอักษรในไอคอน (1–3 ตัว)',
+              hintText: 'เช่น เช่า, ฟิ, น้ำ',
               border: OutlineInputBorder(),
             ),
           ),

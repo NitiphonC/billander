@@ -102,6 +102,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 () => _month = firstDayOfMonth(widget.state.today)),
             child: const Text('กลับไปวันนี้'),
           ),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text(
+              'ตัวเลขในแต่ละวัน = ยอดที่ต้องเก็บในวันนั้น · แตะเพื่อดูว่ามาจากบิลไหน',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+          const SizedBox(height: 8),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Row(

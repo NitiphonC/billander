@@ -263,16 +263,23 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('ลิมิตเก็บล่วงหน้า'),
+      title: const Text('ระยะเก็บล่วงหน้า'),
       content: Form(
         key: _formKey,
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const Text(
+              'เริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
+              '(นับวันจ่ายเป็น 1 วันด้วย)',
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 12),
             DropdownButtonFormField<SaveAheadUnit>(
               initialValue: _unit,
               decoration: const InputDecoration(
-                labelText: 'หน่วย',
+                labelText: 'หน่วย (วัน / เดือน / ปี)',
                 border: OutlineInputBorder(),
               ),
               items: SaveAheadUnit.values
@@ -289,7 +296,15 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
               autofocus: true,
               keyboardType: TextInputType.number,
               decoration: InputDecoration(
-                labelText: 'จำนวน${_unit.label}',
+                labelText: 'เก็บกี่${_unit.label} (รวมวันจ่าย)',
+                helperText: switch (_unit) {
+                  SaveAheadUnit.days =>
+                    'ใส่ 1 = เฉพาะวันจ่าย · ใส่ 7 = วันจ่าย + อีก 6 วันก่อน',
+                  SaveAheadUnit.months =>
+                    'ใส่ 1 = เฉพาะเดือนที่จ่าย · ใส่ 2 = รวมเดือนก่อนหน้า',
+                  SaveAheadUnit.years =>
+                    'ใส่ 1 = เฉพาะปีที่จ่าย · ใส่ 2 = รวมปีก่อนหน้า',
+                },
                 border: const OutlineInputBorder(),
               ),
               validator: (v) {

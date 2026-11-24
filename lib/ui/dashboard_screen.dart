@@ -44,6 +44,12 @@ class DashboardScreen extends StatelessWidget {
                   ),
                 ),
                 IconButton.filledTonal(
+                  tooltip: 'วิธีใช้แอป',
+                  onPressed: () => _showHelp(context),
+                  icon: const Icon(Icons.help_outline),
+                ),
+                const SizedBox(width: 8),
+                IconButton.filledTonal(
                   tooltip: 'ตรวจสอบอัปเดต',
                   onPressed: () async {
                     await state.checkForUpdate(force: true);
@@ -130,6 +136,56 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
+  void _showHelp(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('วิธีใช้แอป'),
+        content: const SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text('1. เพิ่มบิล', style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text('แท็บ "บิล" → กด + → ใส่ชื่อบิล จำนวนเงิน และวันที่จ่าย'),
+              SizedBox(height: 12),
+              Text('2. เก็บเงินตามยอดที่แอปบอก',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
+                'หน้าภาพรวมบอกว่าวันนี้ต้องใส่เงินเท่าไหร่ — กด "เก็บวันนี้" '
+                'เพื่อบันทึก เงินจะอยู่ใน "คลัง" รอจ่ายตอนถึงกำหนด',
+              ),
+              SizedBox(height: 12),
+              Text('3. ดูวันที่ต้องเก็บ',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
+                'แท็บ "ปฏิทิน" โชว์ยอดที่ต้องเก็บแต่ละวัน '
+                '(แตะวันเพื่อดูว่ามาจากบิลไหน)',
+              ),
+              SizedBox(height: 12),
+              Text('4. ตั้งค่าถ้าต้องการ',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+              SizedBox(height: 4),
+              Text(
+                'แท็บ "ตั้งค่า" แก้เงินในคลังได้โดยตรง '
+                'และเปลี่ยนระยะเก็บล่วงหน้าที่ใช้กับทุกบิล',
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('เข้าใจแล้ว'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _heroCard(BuildContext context, SavingsPlan plan) {
     final theme = Theme.of(context);
     return Container(
@@ -164,9 +220,9 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'ลิมิตเก็บล่วงหน้า ${state.defaultSaveAheadMonths} '
-            '${state.defaultSaveAheadUnit.label}'
-            '${plan.excludedCount > 0 ? ' · มี ${plan.excludedCount} บิลรอนอกช่วง' : ''}',
+            'เริ่มเก็บล่วงหน้า ${state.defaultSaveAheadMonths} '
+            '${state.defaultSaveAheadUnit.label} (รวมวันจ่าย)'
+            '${plan.excludedCount > 0 ? ' · ${plan.excludedCount} บิลยังไม่เข้าช่วง' : ''}',
             style: const TextStyle(color: Colors.white70, fontSize: 11),
           ),
           const SizedBox(height: 12),
@@ -214,10 +270,21 @@ class DashboardScreen extends StatelessWidget {
     if (plan.bills.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
-        child: Text(
-          'ยังไม่มีบิลที่ต้องจ่าย\nกดแท็บ "บิล" เพื่อเพิ่มรายจ่าย',
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
+        child: Column(
+          children: [
+            Text(
+              'ยังไม่มีบิลที่ต้องจ่าย',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'เริ่มใช้งาน 3 ขั้นตอน:\n'
+              '1. กดแท็บ "บิล" → กด + เพื่อเพิ่มบิล\n'
+              '2. ใส่ชื่อบิล จำนวนเงิน วันที่จ่าย\n'
+              '3. กลับมาหน้าภาพรวม จะเห็นยอดที่ต้องเก็บวันนี้',
+              textAlign: TextAlign.center,
+            ),
+          ],
         ),
       );
     }
