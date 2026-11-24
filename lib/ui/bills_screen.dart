@@ -33,9 +33,7 @@ class BillsScreen extends StatelessWidget {
           children: [
             Text(
               'บิลทั้งหมด',
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: AppType.headline(context),
             ),
             const SizedBox(height: AppSpace.md),
             SectionCard(
@@ -396,14 +394,13 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         children: [
           Text(
             widget.bill == null ? 'เพิ่มบิล' : 'แก้ไขบิล',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: AppType.headline(context),
           ),
-          const SizedBox(height: AppSpace.xs),
-          const Text(
+          const SizedBox(height: AppSpace.sm),
+          Text(
             'บอกจำนวนเงิน วันที่จ่าย และความถี่ '
             'แอปจะคำนวณเองว่าต้องเก็บวันละเท่าไหร่',
+            style: AppType.muted(context),
           ),
           const SizedBox(height: AppSpace.lg),
           if (_saveError != null)
@@ -467,10 +464,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
           const SizedBox(height: AppSpace.md),
           DropdownButtonFormField<RepeatUnit>(
             initialValue: _repeatUnit,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'บิลนี้จ่ายซ้ำไหม',
               helperText: 'จ่ายครั้งเดียว → ไม่ซ้ำ · จ่ายทุกเดือน → ทุกเดือน',
-              border: OutlineInputBorder(),
+              helperStyle: AppType.caption(context),
+              border: const OutlineInputBorder(),
             ),
             items: RepeatUnit.values
                 .map((u) =>
@@ -510,9 +508,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             const SizedBox(height: AppSpace.md),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('จ่ายไปเรื่อย ๆ (ไม่มีรอบสุดท้าย)'),
-              subtitle: const Text(
+              title: Text('จ่ายไปเรื่อย ๆ (ไม่มีรอบสุดท้าย)',
+                  style: AppType.rowTitle(context)),
+              subtitle: Text(
                 'เปิด = สร้างบิลต่อไปเรื่อย ๆ (แสดงล่วงหน้า 1 ปี)',
+                style: AppType.rowSubtitle(context),
               ),
               value: _forever,
               onChanged: (v) => setState(() => _forever = v),
@@ -521,10 +521,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               TextFormField(
                 controller: _timesController,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'จำนวนรอบทั้งหมด',
                   helperText: 'เช่น 3 = จ่าย 3 รอบ (รอบนี้ + อีก 2 รอบ)',
-                  border: OutlineInputBorder(),
+                  helperStyle: AppType.caption(context),
+                  border: const OutlineInputBorder(),
                 ),
                 validator: (v) {
                   final n = int.tryParse(v ?? '');
@@ -537,7 +538,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               _forever
                   ? 'ระบบจะสร้างบิลต่อไปเรื่อย ๆ (แสดงล่วงหน้า 1 ปี)'
                   : 'ตัวอย่าง: ใส่ 3 = จ่ายทั้งหมด 3 รอบ (รอบนี้ + อีก 2 รอบ)',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: AppType.caption(context),
             ),
           ],
           const SizedBox(height: AppSpace.md),
@@ -549,7 +550,8 @@ class _BillEditorFormState extends State<_BillEditorForm> {
           const SizedBox(height: AppSpace.sm),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล'),
+            title: Text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล',
+                style: AppType.rowTitle(context)),
             subtitle: Text(
               _useDefaultAhead
                   ? 'เปิด = ใช้ค่าตั้งต้น ${widget.state.defaultSaveAheadMonths} '
@@ -558,6 +560,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                   : 'บิลนี้ใช้ค่าที่ตั้งแยก ไม่ตามค่าตั้งต้น '
                       '(${widget.state.defaultSaveAheadMonths} '
                       '${widget.state.defaultSaveAheadUnit.label})',
+              style: AppType.rowSubtitle(context),
             ),
             value: _useDefaultAhead,
             onChanged: (v) => setState(() => _useDefaultAhead = v),
@@ -591,6 +594,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                   SaveAheadUnit.years =>
                     'ใส่ 1 = เฉพาะปีที่จ่าย · ใส่ 2 = รวมปีก่อนหน้า',
                 },
+                helperStyle: AppType.caption(context),
                 border: const OutlineInputBorder(),
               ),
               validator: (v) {
@@ -615,9 +619,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
           if (widget.bill != null && widget.bill!.isRecurring)
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('ใช้กับรอบในอนาคตด้วย'),
-              subtitle: const Text(
+              title: Text('ใช้กับรอบในอนาคตด้วย',
+                  style: AppType.rowTitle(context)),
+              subtitle: Text(
                 'เปิด = แก้รอบนี้และรอบที่ยังไม่จ่าย · ปิด = แก้เฉพาะรอบนี้',
+                style: AppType.rowSubtitle(context),
               ),
               value: _applyToFuture,
               onChanged: (v) => setState(() => _applyToFuture = v),
@@ -630,14 +636,12 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               Expanded(
                 child: Text(
                   'ไอคอนบิล',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: AppType.title(context),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpace.xs),
+          const SizedBox(height: AppSpace.sm),
           Text(
             'ไม่บังคับ — ใส่ตัวอักษรหรือวาดรูปเพื่อจำบิลได้ง่ายขึ้น',
             style: AppType.caption(context),

@@ -51,9 +51,7 @@ class SettingsScreen extends StatelessWidget {
         children: [
           Text(
             'ตั้งค่า',
-            style: theme.textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppType.headline(context),
           ),
           const SizedBox(height: AppSpace.md),
           SectionCard(
@@ -63,16 +61,15 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 Text(
                   Money.format(state.poolSatang),
-                  style: theme.textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
+                  style: AppType.headline(context)
+                      .copyWith(color: theme.colorScheme.primary),
                 ),
-                const SizedBox(height: AppSpace.xs),
-                const Text(
+                const SizedBox(height: AppSpace.sm),
+                Text(
                   'เงินที่เก็บไว้แล้ว ตรงกับ "ในคลัง" ในหน้าภาพรวม\n'
                   'กดปุ่มด้านล่างเพื่อแก้จำนวนเงินได้เลย '
                   '(ประวัติเก็บ/ใช้/จ่ายเดิมยังอยู่ครบ)',
+                  style: AppType.muted(context),
                 ),
                 const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
@@ -92,18 +89,17 @@ class SettingsScreen extends StatelessWidget {
                 Text(
                   'ค่าตั้งต้น: ${state.defaultSaveAheadMonths} '
                   '${state.defaultSaveAheadUnit.label}',
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: theme.colorScheme.primary,
-                  ),
+                  style: AppType.title(context)
+                      .copyWith(color: theme.colorScheme.primary),
                 ),
-                const SizedBox(height: AppSpace.xs),
-                const Text(
+                const SizedBox(height: AppSpace.sm),
+                Text(
                   'แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
                   '(นับวันจ่ายเป็น 1 วัน) — เช่น ตั้ง 1 วัน = โชว์ยอดเฉพาะวันจ่าย, '
                   'ตั้ง 7 วัน = โชว์ 7 วันสุดท้ายก่อนจ่าย\n'
                   'บิลที่อยู่ไกลกว่านี้ยังไม่นำมาเก็บ '
                   '(ตั้งแยกได้ในหน้าแก้บิล)',
+                  style: AppType.muted(context),
                 ),
                 const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
@@ -136,11 +132,11 @@ class SettingsScreen extends StatelessWidget {
                   const SizedBox(height: AppSpace.md),
                   Text(
                     'บิลที่ตั้งแยกไว้ (ไม่ตามค่าตั้งต้น)',
-                    style: theme.textTheme.labelLarge,
+                    style: AppType.label(context),
                   ),
                   for (final bill in finalOverrides)
                     Padding(
-                      padding: const EdgeInsets.only(top: AppSpace.xs),
+                      padding: const EdgeInsets.only(top: AppSpace.sm),
                       child: Row(
                         children: [
                           const Icon(Icons.tune, size: 14),
@@ -158,7 +154,7 @@ class SettingsScreen extends StatelessWidget {
                     padding: const EdgeInsets.only(top: AppSpace.sm),
                     child: Text(
                       'ยังไม่มีบิลที่ตั้งแยก — ทุกบิลใช้ค่าตั้งต้น',
-                      style: theme.textTheme.bodySmall,
+                      style: AppType.caption(context),
                     ),
                   ),
               ],
@@ -171,8 +167,10 @@ class SettingsScreen extends StatelessWidget {
               children: [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text('เปิดแจ้งเตือน'),
-                  subtitle: const Text('บอกยอดที่ต้องเก็บวันนี้'),
+                  title: Text('เปิดแจ้งเตือน',
+                      style: AppType.rowTitle(context)),
+                  subtitle: Text('บอกยอดที่ต้องเก็บวันนี้',
+                      style: AppType.rowSubtitle(context)),
                   value: state.notificationsEnabled,
                   onChanged: (value) => state.updateSetting(
                     settingNotifications,
@@ -203,12 +201,12 @@ class SettingsScreen extends StatelessWidget {
                   state.updateUrl.isEmpty
                       ? 'ยังไม่ได้ตั้งค่าที่อยู่ update.json'
                       : state.updateUrl,
-                  style: theme.textTheme.bodySmall,
+                  style: AppType.caption(context),
                 ),
-                const SizedBox(height: AppSpace.xs),
+                const SizedBox(height: AppSpace.sm),
                 Text(
                   'ตัวอย่าง: $kUpdateJsonHelp',
-                  style: theme.textTheme.bodySmall,
+                  style: AppType.caption(context),
                 ),
                 const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
@@ -228,6 +226,7 @@ class SettingsScreen extends StatelessWidget {
                   icon: const Icon(Icons.link),
                   label: const Text('ตั้งค่าที่อยู่อัปเดต'),
                 ),
+                const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
                   onPressed: () async {
                     await state.checkForUpdate(force: true);
@@ -259,7 +258,7 @@ class SettingsScreen extends StatelessWidget {
               '• ถ้าผ่านไปหนึ่งวันโดยไม่บันทึก วันที่เหลือจะลดลง '
               'และยอดต่อวันจะเพิ่มขึ้นอัตโนมัติ\n'
               '• กดจ่ายบิลได้ก็ต่อเมื่อเงินในคลังพอจ่ายบิลนั้น',
-              style: theme.textTheme.bodyMedium,
+              style: AppType.body(context),
             ),
           ),
         ],

@@ -33,13 +33,19 @@
 | `display` | หัวข้อหลัก/ยอดใหญ่สุด | 1.2 |
 | `headline` | หัวข้อรอง | 1.25 |
 | `title` | ชื่อการ์ด/.section | default |
-| `label` | ชื่อรายการ/ป้ายตัวเลข | default |
+| `label` | ชื่อรายการ/ป้ายตัวเลข | 1.4 |
+| `rowTitle` | **ชื่อแถวกดได้** (SwitchListTile/ListTile) — ใช้เสมอ | 1.4 |
+| `rowSubtitle` | คำอธิบายใต้ชื่อแถว | 1.4 |
 | `body` | เนื้อหา | 1.45 |
 | `muted` | คำอธิบายรอง (สีจาง) | 1.5 |
 | `caption` | คำอธิบายใต้ช่องกรอก | 1.4 |
 | `calendarAmount` | ยอดในเซลล์ปฏิทิน (≥ labelSmall) | 1.2 |
 
 ข้อความไทยมี `height` ขยายเพื่ออ่านง่าย — ห้ามลดลง
+
+**ห้ามปล่อย `Text`, `SwitchListTile.title/subtitle`, `ListTile.title/subtitle` โดยไม่ใส่ `style: AppType.*`**
+ค่าที่ Material ให้มา (`bodyLarge` 16px) ไม่ใช่ของ design system — มันจะใหญ่กว่าคำอธิบาย `caption` (12px) ทันที
+กฎความต่าง: `rowTitle` − `caption` ≤ 2px และ `rowTitle` < `title` (หัวข้อส่วน)
 
 ## 4. การบังคับใช้
 

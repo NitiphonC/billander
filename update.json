@@ -1,6 +1,6 @@
 {
-  "versionCode": 19,
-  "versionName": "0.1.18",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.18/app-arm64-v8a-release.apk",
-  "notes": "มาตรฐานการออกแบบกลาง (spacing/typography/radius) ใช้ตรงกันทุกหน้า + ปฏิทินเลื่อนแนวตั้ง ไม่มีปุ่มซ้ายขวา"
+  "versionCode": 20,
+  "versionName": "0.1.19",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.19/app-arm64-v8a-release.apk",
+  "notes": "แก้ hierarchy ตัวอักษร: ป้าย switch ใช้ AppType.rowTitle (14px) แทนค่าเริ่มต้น Material 16px, ใช้ AppType ให้ตรงกันทุกหน้า, เพิ่ม test วัดสไตล์จริง"
 }

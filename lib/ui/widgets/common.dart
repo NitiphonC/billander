@@ -33,9 +33,7 @@ class SectionCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     title,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                    style: AppType.title(context),
                   ),
                 ),
                 if (action != null) action!,
@@ -274,7 +272,7 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
             Text(
               'เริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
               '(นับวันจ่ายเป็น 1 วันด้วย)',
-              style: AppType.caption(context),
+              style: AppType.muted(context),
             ),
             const SizedBox(height: AppSpace.md),
             DropdownButtonFormField<SaveAheadUnit>(
@@ -306,6 +304,7 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
                   SaveAheadUnit.years =>
                     'ใส่ 1 = เฉพาะปีที่จ่าย · ใส่ 2 = รวมปีก่อนหน้า',
                 },
+                helperStyle: AppType.caption(context),
                 border: const OutlineInputBorder(),
               ),
               validator: (v) {

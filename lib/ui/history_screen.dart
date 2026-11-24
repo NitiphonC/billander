@@ -65,9 +65,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Text(
                   '${thaiMonths[_month.month - 1]} ${_month.year + 543}',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                  style: AppType.title(context),
                 ),
               ),
               IconButton.filledTonal(
@@ -95,7 +93,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           const SizedBox(height: AppSpace.sm),
           Text(
             'วันที่ไม่ได้บันทึก $missedDays วัน (ระบบคำนวณยอดต่อวันเพิ่มขึ้นอัตโนมัติ)',
-            style: Theme.of(context).textTheme.bodySmall,
+            style: AppType.caption(context),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: AppSpace.md),
@@ -118,9 +116,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Text(
                       '${tryParseDateKey(group.key)?.day ?? ''} '
                       '${thaiMonths[(tryParseDateKey(group.key)?.month ?? 1) - 1]}',
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: AppType.label(context),
                     ),
                     for (final entry in group.value) _entryTile(entry),
                   ],

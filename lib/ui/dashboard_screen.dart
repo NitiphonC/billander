@@ -35,11 +35,10 @@ class DashboardScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('วันนี้', style: theme.textTheme.bodyMedium),
+                      Text('วันนี้', style: AppType.caption(context)),
                       Text(
                         formatDateThai(state.today),
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                        style: AppType.headline(context),
                       ),
                     ],
                   ),
@@ -206,21 +205,19 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('ต้องเก็บวันนี้', style: TextStyle(color: Colors.white70)),
+          Text('ต้องเก็บวันนี้',
+              style: AppType.label(context).copyWith(color: Colors.white70)),
           const SizedBox(height: AppSpace.xs),
           Text(
             Money.format(plan.dailyRequiredSatang),
-            style: theme.textTheme.displaySmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: AppType.display(context).copyWith(color: Colors.white),
           ),
           const SizedBox(height: AppSpace.sm),
           Text(
             plan.note ?? '',
-            style: const TextStyle(color: Colors.white70),
+            style: AppType.body(context).copyWith(color: Colors.white70),
           ),
-          const SizedBox(height: AppSpace.xs),
+          const SizedBox(height: AppSpace.sm),
           Text(
             'เริ่มเก็บล่วงหน้า ${state.defaultSaveAheadMonths} '
             '${state.defaultSaveAheadUnit.label} (รวมวันจ่าย)'
@@ -279,15 +276,16 @@ class DashboardScreen extends StatelessWidget {
           children: [
             Text(
               'ยังไม่มีบิลที่ต้องจ่าย',
-              style: Theme.of(context).textTheme.titleMedium,
+              style: AppType.title(context),
             ),
             const SizedBox(height: AppSpace.sm),
-            const Text(
+            Text(
               'เริ่มใช้งาน 3 ขั้นตอน:\n'
               '1. กดแท็บ "บิล" → กด + เพื่อเพิ่มบิล\n'
               '2. ใส่ชื่อบิล จำนวนเงิน วันที่จ่าย\n'
               '3. กลับมาหน้าภาพรวม จะเห็นยอดที่ต้องเก็บวันนี้',
               textAlign: TextAlign.center,
+              style: AppType.muted(context),
             ),
           ],
         ),

@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:billandar/data/storage.dart';
 import 'package:billandar/state/app_state.dart';
+import 'package:billandar/ui/bills_screen.dart';
 import 'package:billandar/ui/calendar_screen.dart';
 import 'package:billandar/ui/design_system.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -122,6 +124,62 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('ธันวาคม 2569'), findsOneWidget);
+    });
+
+    testWidgets('DS-05 สไตล์จริงของป้าย switch ต้องเท่ากับ rowTitle ไม่ใช่ 16px',
+        (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final state = AppState(
+        storage: WebStorage(),
+        todayOverride: DateTime(2026, 11, 23),
+      );
+      await state.load();
+      addTearDown(state.dispose);
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: Builder(
+            builder: (ctx) => ElevatedButton(
+              onPressed: () => BillEditorSheet.show(ctx, state),
+              child: const Text('open'),
+            ),
+          ),
+        ),
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+
+      TextStyle painted(Finder f) =>
+          tester.renderObject<RenderParagraph>(f).text.style!;
+      final title = painted(find.text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล'));
+      final caption = painted(
+        find.textContaining('ระยะเก็บล่วงหน้า ='),
+      );
+
+      expect(title.fontSize, 14);
+      expect(title.fontWeight, FontWeight.w600);
+      expect(caption.fontSize, 12);
+      expect(title.fontSize! - caption.fontSize!, lessThanOrEqualTo(2));
+    });
+
+    test('DS-06 SwitchListTile ทุกตัวต้องระบุ style แบบ AppType', () {
+      final files = Directory('${Directory.current.path}/lib/ui')
+          .listSync(recursive: true)
+          .whereType<File>()
+          .where((f) => f.path.endsWith('.dart'));
+      for (final file in files) {
+        final lines = file.readAsStringSync().split('\n');
+        for (var i = 0; i < lines.length; i++) {
+          if (!lines[i].contains('SwitchListTile(')) continue;
+          final block = lines.skip(i).take(12).join('\n');
+          expect(
+            block.contains('style: AppType.'),
+            isTrue,
+            reason:
+                '${file.path}:${i + 1} SwitchListTile ไม่มี style: AppType.* '
+                '(จะตกไปใช้ bodyLarge 16px ของ Material)',
+          );
+        }
+      }
     });
   });
 }

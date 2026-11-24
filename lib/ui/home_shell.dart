@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../state/app_state.dart';
 import 'bills_screen.dart';
+import 'design_system.dart';
 import 'calendar_screen.dart';
 import 'dashboard_screen.dart';
 import 'history_screen.dart';
@@ -61,7 +62,14 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           });
         }
 
-        return Scaffold(
+        // ป้องกัน ListTile/SwitchListTile ทุกตัวตกไปใช้ bodyLarge 16px
+        // ของ Material ซึ่งใหญ่กว่าคำอธิบาย AppType.caption 12px
+        return ListTileTheme(
+          data: ListTileThemeData(
+            titleTextStyle: AppType.rowTitle(context),
+            subtitleTextStyle: AppType.muted(context),
+          ),
+          child: Scaffold(
           body: IndexedStack(
             index: _index,
             children: [
@@ -76,6 +84,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
             selectedIndex: _index,
             destinations: _destinations,
             onDestinationSelected: (index) => setState(() => _index = index),
+          ),
           ),
         );
       },

@@ -40,7 +40,15 @@ class AppRadius {
 }
 
 /// มาตราส่วนตัวอักษรจาก Theme.textTheme เท่านั้น
-///กำหนด line-height ให้ข้อความอ่านง่าย โดยเฉพาะภาษาไทย
+/// กำหนด line-height ให้ข้อความอ่านง่าย โดยเฉพาะภาษาไทย
+///
+/// สำคัญ: ห้ามปล่อย `Text` หรือ `SwitchListTile.title/subtitle` โดยไม่ใส่
+/// `style:` — ค่าที่ Material ให้มา (bodyLarge 16px) ไม่ใช่ของ design system
+/// และจะใหญ่กว่าคำอธิบาย AppType.caption (12px) ทันที
+///
+/// ลำดับบทบาท:
+/// headline (24) > title (16, หัวข้อส่วน) > rowTitle (14, ชื่อแถวกดได้)
+/// > body/muted (14, คำอธิบาย) > caption (12, ข้อความสั้นใต้ช่อง)
 class AppType {
   const AppType._();
 
@@ -89,6 +97,14 @@ class AppType {
         weight: FontWeight.w600,
       );
 
+  /// ชื่อแถวที่กดได้ (SwitchListTile / ListTile / CheckboxListTile)
+  /// ต้องใส่เสมอ — ค่าเริ่มต้นของ Material คือ bodyLarge 16px ซึ่งใหญ่เกินไป
+  /// และเท่ากับหัวข้อ Sections ทำให้ดูเหมือนหัวข้อ
+  static TextStyle rowTitle(BuildContext context) => label(context);
+
+  /// คำอธิบายใต้ชื่อแถว — ใช้คู่กับ [rowTitle]
+  static TextStyle rowSubtitle(BuildContext context) => caption(context);
+
   /// เนื้อหาปกติ
   static TextStyle body(BuildContext context) => _style(
         context,
@@ -116,7 +132,7 @@ class AppType {
   static TextStyle calendarAmount(BuildContext context) => _style(
         context,
         (t) => t.labelSmall,
-        height: 1.2,
+        height: 1.4,
         color: Theme.of(context).colorScheme.primary,
         weight: FontWeight.w700,
       );
@@ -125,7 +141,7 @@ class AppType {
   static TextStyle statLabel(BuildContext context) => _style(
         context,
         (t) => t.labelSmall,
-        height: 1.3,
+        height: 1.4,
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       );
 }

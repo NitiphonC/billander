@@ -295,9 +295,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 children: [
                   Text(
                     formatDateThai(date),
-                    style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                    style: AppType.headline(sheetContext),
                   ),
                   const SizedBox(height: AppSpace.md),
                   if (!date.isBefore(widget.state.today) &&
@@ -306,20 +304,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       padding: const EdgeInsets.only(bottom: AppSpace.md),
                       child: Text(
                         'วันนี้ต้องเก็บ ${Money.format(_dailyByDate[dateKey(date)] ?? 0)}',
-                        style: Theme.of(sheetContext)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(
-                              color: Theme.of(sheetContext).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: AppType.title(sheetContext).copyWith(
+                          color: Theme.of(sheetContext).colorScheme.primary,
+                        ),
                       ),
                     ),
                   if (!date.isBefore(widget.state.today) &&
                       contributions.isNotEmpty) ...[
                     Text(
                       'ยอดที่ต้องเก็บวันนี้มาจาก',
-                      style: Theme.of(sheetContext).textTheme.titleMedium,
+                      style: AppType.title(sheetContext),
                     ),
                     const SizedBox(height: AppSpace.xs),
                     for (final item in contributions)
@@ -351,7 +345,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     const Divider(),
                   ],
                   Text('บิลวันนี้',
-                      style: Theme.of(sheetContext).textTheme.titleMedium),
+                      style: AppType.title(sheetContext)),
                   if (bills.isEmpty) const Text('ไม่มีบิล'),
                   for (final bill in bills)
                     ListTile(
@@ -399,7 +393,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ),
                   const Divider(),
                   Text('บันทึกเงินวันนี้',
-                      style: Theme.of(sheetContext).textTheme.titleMedium),
+                      style: AppType.title(sheetContext)),
                   if (entries.isEmpty) const Text('ยังไม่มีบันทึก'),
                   for (final entry in entries) _entryTile(entry),
                   const SizedBox(height: AppSpace.lg),

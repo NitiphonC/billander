@@ -92,10 +92,10 @@
 
 ## ผลลัพธ์ล่าสุด (รันจริง 24 พ.ย. 2026)
 
-- `flutter test` → **113 tests passed** (CAL 25 + CORE 16 + UI 12 + SET 30 + REC 12 + REG 7 + WEB 2 + STATIC 5 + DS 4)
+- `flutter test` → **115 tests passed** (CAL 25 + CORE 16 + UI 12 + SET 30 + REC 12 + REG 7 + WEB 2 + STATIC 5 + DS 6)
 - `flutter test integration_test/app_test.dart -d emulator-5554 --timeout 4m` → **2 tests passed** (INT-01–07)
 - `flutter analyze` → **No issues found**
-- รวม **113 กรณีทดสอบอัตโนมัติ** + 10 กรณีตรวจด้วยมือ (MAN-01–10) + **7 กรณีตรวจด้วยภาพจริง** (VIS-01–07)
+- รวม **115 กรณีทดสอบอัตโนมัติ** + 10 กรณีตรวจด้วยมือ (MAN-01–10) + **7 กรณีตรวจด้วยภาพจริง** (VIS-01–07)
 
 ### วิธีรันซ้ำ
 
@@ -183,6 +183,8 @@ flutter analyze
 | DS-02 | สแกน UI | ไม่มี `fontSize` < 11 หรือระยะห่างนอกมาตราส่วน |
 | DS-03 | ลำดับชั้นตัวอักษร | display > title > body และ line-height ≥ 1.4 |
 | DS-04 | ปฏิทินเลื่อนแนวตั้ง | ไม่มีปุ่มซ้าย/ขวา เลื่อนลงเจอเดือนถัดไป |
+| DS-05 | สไตล์จริงของป้าย switch | วัด `RenderParagraph` → 14px/w600 (ไม่ใช่ 16px) และต่างจาก caption ≤2px |
+| DS-06 | สแกน SwitchListTile | ทุกตัวระบุ `style: AppType.*` |
 | UI-HELP-01 | ปุ่ม "วิธีใช้แอป" เปิดคู่มือ 4 ขั้นตอน | ผู้ใช้ครั้งแรกกดปุ่มช่วยแล้วเข้าใจลำดับใช้งาน |
 | UI-EMPTY-01 | หน้าเปล่าโชว์ 3 ขั้นตอนเริ่มใช้ | ไม่ต้องเดาว่าควรกดอะไร |
 | UI-FORM-01 | ฟอร์มบิลมีตัวอย่างในแต่ละช่อง | ชื่อ/เงิน/วันจ่าย/ความถี่/ระยะเก็บ มี helperText อธิบาย |
