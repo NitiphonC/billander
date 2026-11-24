@@ -50,7 +50,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       bills: widget.state.bills,
       poolSatang: widget.state.poolSatang,
       today: widget.state.today,
-      maxDays: 120,
+      // ครอบลิมิตแบบปี/อัปเดตไม่จำกัดได้ด้วย (เดิม 120 วัน → บิลไกลหาย)
+      maxDays: 1830,
       defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
       defaultSaveAheadUnit: widget.state.defaultSaveAheadUnit,
       // ปฏิทินใช้คลังจริงทุกวัน ไม่จำลองการเก็บ/จ่ายในอนาคต

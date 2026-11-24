@@ -8,7 +8,7 @@
 flutter build web --release --base-href=/<ชื่อ-repo>/
 ```
 
-เช่น repo ชื่อ `billandar` → `--base-href=/billandar/`
+เช่น repo ชื่อ `billander` → `--base-href=/billander/`
 
 ผลลัพธ์อยู่ที่ `build\web\` (มี `index.html`, `flutter_bootstrap.js`, `main.dart.js`, `manifest.json`, `icons/`)
 
@@ -16,7 +16,7 @@ flutter build web --release --base-href=/<ชื่อ-repo>/
 
 **วิธีที่แนะนำ: ให้ GitHub Actions build + deploy ให้เอง (ไม่ต้อง commit ไฟล์ build)**
 
-1. สร้าง repo บน GitHub (public) ชื่ออะไรก็ได้ เช่น `billandar`
+1. สร้าง repo บน GitHub (public) ชื่ออะไรก็ได้ เช่น `billander`
 2. push โค้ดขึ้น repo (มี `.github/workflows/deploy.yml` อยู่แล้ว)
 3. ไปที่ repo → **Settings** → **Pages** → Source: **GitHub Actions** → Save
 4. กด **Actions** → เลือก workflow "Deploy PWA to GitHub Pages" → **Run workflow** (หรือ push ครั้งหน้าก็รันอัตโนมัติ)

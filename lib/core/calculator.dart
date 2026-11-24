@@ -112,6 +112,21 @@ class Calculator {
         .where((b) => !b.isPaid)
         .map((b) => b.copyWith(paidAt: null, clearPaidAt: true))
         .toList();
+    // จัดสรร "คลังจริง" ครั้งเดียวตามลำดับวันจ่าย — ถ้าหักใน calculate() ทุกวัน
+    // คลังก้อนเดียวจะไปหักคนละบิลซ้ำกันในแต่ละวัน (REG-04)
+    final poolCoverage = <String, int>{};
+    if (!simulateFutureSavings && poolSatang > 0) {
+      var left = poolSatang;
+      final ordered = [...pending]
+        ..sort((a, b) => a.dueDate.compareTo(b.dueDate));
+      for (final b in ordered) {
+        if (left <= 0) break;
+        final cover = left < b.amountSatang ? left : b.amountSatang;
+        if (cover > 0) poolCoverage[b.id] = cover;
+        left -= cover;
+      }
+    }
+
     final result = <ProjectionDay>[];
     var cursor = dateOnly(today);
     final lastDue = pending.isEmpty
@@ -147,12 +162,21 @@ class Calculator {
       final billsForDay = simulateFutureSavings
           ? pending
           : pending.where((b) => !b.dueDate.isBefore(cursor)).toList();
+      final adjustedBills = poolCoverage.isEmpty
+          ? billsForDay
+          : billsForDay.map((b) {
+              final cover = poolCoverage[b.id] ?? 0;
+              return cover > 0
+                  ? b.copyWith(amountSatang: b.amountSatang - cover)
+                  : b;
+            }).toList();
       final plan = calculate(
-        bills: billsForDay,
-        poolSatang: simulateFutureSavings ? balance : poolSatang,
+        bills: adjustedBills,
+        poolSatang: simulateFutureSavings ? balance : 0,
         today: cursor,
         defaultSaveAheadMonths: defaultSaveAheadMonths,
         defaultSaveAheadUnit: defaultSaveAheadUnit,
+        applyPoolCoverage: simulateFutureSavings,
       );
       result.add(ProjectionDay(
         date: cursor,
@@ -228,8 +252,9 @@ class Calculator {
         return a.id.compareTo(b.id);
       });
 
-    // ปฏิทินต้องการ "ยอดที่แต่ละบิลขอเก็บในวันนั้น" แบบไม่หักคลัง
-    // (หน้าภาพรวมใช้ค่าตั้งต้น = true ตามกฎเดิม)
+    // หัก "คลังจริง" ตามปกติ (ถ้าคลังพอ ≠ ต้องเก็บ) — การจำลองการเก็บ/จ่าย
+    // ในอนาคตถูกปิดแยกต่างหากโดย project(simulateFutureSavings:false)
+    // ซึ่งเป็นมุมมองที่ปฏิทินใช้
     var available = applyPoolCoverage && poolSatang > 0 ? poolSatang : 0;
     var totalOutstanding = 0;
     var coveredTotal = 0;

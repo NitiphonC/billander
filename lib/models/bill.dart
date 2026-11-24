@@ -178,7 +178,8 @@ class Bill {
     return Bill(
       id: map['id'] as String,
       title: map['title'] as String,
-      amountSatang: (map['amount'] as num).toInt(),
+      // กันข้อมูลเสีย/ถูกแต่ง → ยอดติดลบหรือ 0 ทำให้ยอดรวมเพี้ยน
+      amountSatang: (map['amount'] as num).toInt().abs(),
       dueDate: tryParseDateKey(map['due_date'] as String?) ?? DateTime.now(),
       repeatUnit: unit,
       repeatEvery: (map['repeat_every'] as num?)?.toInt() ?? 1,

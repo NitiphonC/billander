@@ -22,7 +22,11 @@ void main() {
   });
 
   Future<AppState> state({AppStorage? storage}) async {
-    final s = AppState(storage: storage ?? WebStorage());
+    // ตรึง "วันนี้" ให้เทสไม่พังตามวันที่เครื่อง (F1)
+    final s = AppState(
+      storage: storage ?? WebStorage(),
+      todayOverride: DateTime(2026, 11, 23),
+    );
     await s.load();
     return s;
   }

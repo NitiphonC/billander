@@ -110,10 +110,11 @@ class BillsScreen extends StatelessWidget {
         break;
       }
     }
-    if (days == 0) {
-      final diff = bill.dueDate.difference(state.today).inDays;
-      days = diff < 0 ? 0 : diff + 1;
+    final diff = bill.dueDate.difference(state.today).inDays;
+    if (diff < 0) {
+      return ' · เก็บล่วงหน้า $value ${unit.label} · เลยกำหนด ${-diff} วัน';
     }
+    if (days == 0) days = diff + 1;
     return ' · เก็บล่วงหน้า $value ${unit.label} · เหลืออีก $days วัน';
   }
 
@@ -152,7 +153,7 @@ class BillsScreen extends StatelessWidget {
                       title: const Text('ลบบิล?'),
                       content: bill.recurring
                           ? const Text(
-                              'บิลนี้เป็นบิลทุกเดือน คุณสามารถลบเฉพาะรอบนี้หรือทุกรอบในอนาคตได้')
+                              'บิลนี้เป็นบิลซ้ำ คุณสามารถลบเฉพาะรอบนี้หรือทุกรอบในอนาคตได้')
                           : const Text('ต้องการลบบิลนี้หรือไม่?'),
                       actions: [
                         TextButton(

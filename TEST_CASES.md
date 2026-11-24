@@ -46,8 +46,9 @@
 | CORE-11 | `daysInMonth(ก.พ. 2028)` | 29 |
 | CORE-12 | `formatDateThai(22 พ.ย. 2026)` | `22 พฤศจิกายน 2569` |
 | CORE-13 | `Bill.toMap` → `fromMap` | ทุก field เท่าเดิม รวม recurring/paidAt |
-| CORE-15 | `save_ahead_unit` เป็น null | ใช้ค่าตั้งต้น (ไม่แปลงเป็น months) → ลิมิต 1 วันไม่ครอบบิลวันที่ 29 |
 | CORE-14 | `LedgerEntry.toMap` → `fromMap` | ทุก field เท่าเดิม รวม type/amount ติดลบ |
+| CORE-15 | `save_ahead_unit` เป็น null | ใช้ค่าตั้งต้น (ไม่แปลงเป็น months) → ลิมิต 1 วันไม่ครอบบิลวันที่ 29 |
+| CORE-16 | `LedgerType` storage name | roundtrip ทุก type |
 
 ## C. Dialog / ฟอร์ม (Widget — `test/dialog_test.dart`)
 
@@ -89,12 +90,12 @@
 | MAN-09 | ปิด/เปิดแอพ | force-stop แล้วเปิดใหม่ | ข้อมูลจาก SQLite ยังอยู่ |
 | MAN-10 | release build | `flutter build apk --release` | ไม่มีหน้าแดง debug assertion |
 
-## ผลลัพธ์ล่าสุด (รันจริง 22 พ.ย. 2026)
+## ผลลัพธ์ล่าสุด (รันจริง 24 พ.ย. 2026)
 
-- `flutter test` → **47 tests passed** (CAL 25 + CORE 15 + UI 7)
+- `flutter test` → **106 tests passed** (CAL 25 + CORE 16 + UI 9 + SET 30 + REC 12 + REG 7 + WEB 2 + STATIC 5)
 - `flutter test integration_test/app_test.dart -d emulator-5554 --timeout 4m` → **2 tests passed** (INT-01–07)
 - `flutter analyze` → **No issues found**
-- รวม **49 กรณีทดสอบอัตโนมัติ** + 10 กรณีตรวจด้วยมือ (MAN-01–10) + **7 กรณีตรวจด้วยภาพจริง** (VIS-01–07)
+- รวม **106 กรณีทดสอบอัตโนมัติ** + 10 กรณีตรวจด้วยมือ (MAN-01–10) + **7 กรณีตรวจด้วยภาพจริง** (VIS-01–07)
 
 ### วิธีรันซ้ำ
 
@@ -178,14 +179,14 @@ flutter analyze
 | ID | กรณี | ผลที่คาด |
 |---|---|---|
 | UI-FONT-01 | ฟอนต์ Prompt ถูกฝังใน `assets/fonts/` และใช้กับทั้งแอพ | ตัวอักษรไทย/อังกฤษเป็น Prompt ทุกหน้า ไม่โหลดจากเน็ต |
-| UI-EMOJI-01 | ไม่มี emoji ในข้อความแอพ | หน้าภาพรวมว่างโชว์ "ยังไม่มีบิลที่ต้องจ่าย" (ไม่มี 🎉) |
+| UI-EMOJI-01 | ไม่มี emoji ในข้อความแอพ | หน้าภาพรวมว่างโชว์ "ยังไม่มีบิลที่ต้องจ่าย" (ไม่มี emoji) |
 | UI-EMOJI-02 | ตรวจโค้ดด้วย regex หา emoji | ไม่พบ emoji ใน `lib/**/*.dart` |
 
 ## G. ตรวจด้วยภาพจริง (Visual verification — จับภาพทีละขั้นตอน)
 
 | ID | ขั้นตอน | สิ่งที่เห็นในภาพ | ผล |
 |---|---|---|---|
-| VIS-01 | เปิดแอพครั้งแรก | ภาพรวม ฿0.00, "ยังไม่มีบิลที่ต้องจ่าย 🎉", ไม่มีข้อความแดง | ✅ (ก่อนแก้เคยเห็น `PlatformException(exact_alarms_not_permitted)` สีแดง) |
+| VIS-01 | เปิดแอพครั้งแรก | ภาพรวม ฿0.00, "ยังไม่มีบิลที่ต้องจ่าย", ไม่มีข้อความแดง/emoji | ✅ (ก่อนแก้เคยเห็น `PlatformException(exact_alarms_not_permitted)` สีแดง) |
 | VIS-02 | แท็บบิล → กด + | Bottom sheet "เพิ่มบิล" วันจ่าย 22 พ.ย. 2569 | ✅ |
 | VIS-03 | ใส่ Rent / 100 → บันทึก | รายการ "รอจ่าย (1)" แสดง Rent ฿100.00 | ✅ |
 | VIS-04 | กลับภาพรวม | ต้องเก็บวันนี้ **฿100.00**, ตารางแนะนำ 22/11 เก็บ ฿100.00 | ✅ |
@@ -201,5 +202,35 @@ flutter analyze
 - เพิ่ม `POST_NOTIFICATIONS` ใน AndroidManifest
 
 > หมายเหตุสำคัญ: `flutter test integration_test/...` จะเขียนทับ `build/app/outputs/flutter-apk/app-debug.apk` ด้วย APK ของ **ตัวทดสอบ** (หน้าจอจะค้างเป็น spinner สีฟ้า) — หลังรัน integration เสร็จต้องรัน `flutter build apk --debug` ใหม่แล้ว install ตัวนี้เท่านั้นจึงจะเป็นแอพปกติ
+
+## J. บัคที่เจอจากการ audit รอบใหญ่ (24 พ.ย. 2026)
+
+### Logic / state (`test/recurrence_test.dart`, `test/regression_test.dart`)
+
+| ID | กรณี | ผลที่คาด |
+|---|---|---|
+| REC-08 | ปิด "ใช้กับรอบในอนาคตด้วย" แล้วแก้รอบ 0 | เฉพาะรอบ 0 เปลี่ยนยอด |
+| REC-09 | ลบรอบ 2 แบบลบอนาคต แล้วเปิดแอพใหม่ | รอบ 2–4 ไม่คืนกลับมา |
+| REC-10 | ลบรอบ 0 แล้วเปิดใหม่ | ไม่มีบิลวันที่ 30 พ.ย. ซ้ำ |
+| REC-11 | ลด repeatTimes 5→3 | เหลือ 3 รอบ |
+| REC-12 | เปลี่ยนรอบกลางเป็นไม่ซ้ำแล้วเปิดใหม่ | รอบนั้นไม่คืนกลับมาเป็นบิลซ้ำ |
+| REG-01 | override เฉพาะค่า (unit=null) ข้อมูลเก่า | ยังตีความเป็น months ตาม migration |
+| REG-02 | ไม่มี override เลย | ใช้ unit ตามค่าตั้งต้นทั้ง days/months |
+| REG-03 | บิลเลยกำหนดในปฏิทิน | ไม่โชว์ยอดเก็บซ้ำ |
+| REG-04 | คลัง 60 บาท + 2 บิล | คลังหักครั้งเดียวตามลำดับวันจ่าย (ไม่หักซ้ำทุกวัน) |
+| REG-05 | แก้คลังหลังจ่ายบิล | รายการ payment เดิมยังอยู่ครบ |
+| REG-06 | ยอดติดลบจากข้อมูลเสีย | ถูก clamp เป็นบวก |
+| REG-07 | บิลเลยกำหนดในแท็บบิล | โชว์ "เลยกำหนด 53 วัน" ไม่ใช่ "เหลืออีก 1 วัน" |
+
+### เวลา / ความปลอดภัย (`test/privacy_static_test.dart`)
+
+| ID | กรณี | ผลที่คาด |
+|---|---|---|
+| TIME-01 | ตรึง "วันนี้" ด้วย `todayOverride` | เทสผ่านทุกวันที่เครื่อง |
+| STATIC-01 | ไม่มี Firebase/analytics/ads/tracking | ไม่พบใน pubspec |
+| STATIC-02 | ไม่มี emoji | ไม่พบใน `lib/**/*.dart` |
+| STATIC-03 | Prompt font | ประกาศ+อ้างอิง+มี OFL.txt |
+| STATIC-04 | base href | `/billander/` ตรง repo จริง |
+| STATIC-05 | workflow | มี `.github/workflows/deploy.yml` |
 >
 > integration test รอบแรกค้างที่ขั้นตอน install (harness handshake) ให้ฆ่า process แล้ว force-stop แอพก่อนรันใหม่; รอบที่สองผ่านปกติ

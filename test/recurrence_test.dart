@@ -151,4 +151,136 @@ void main() {
     expect(state.defaultSaveAheadMonths, 4);
     expect(state.plan.bills.length, 1);
   });
+
+  // --- บัคที่เจอจากการ audit (H1-H4) ---
+
+  Future<AppState> reload() async {
+    final s = AppState(storage: WebStorage());
+    await s.load();
+    return s;
+  }
+
+  test('REC-08 ปิด "ใช้กับรอบในอนาคต" → แก้เฉพาะรอบที่เลือก', () async {
+    final state = await freshState();
+    await state.addBill(
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 4,
+    );
+    final first = state.bills.firstWhere((b) => b.occurrenceIndex == 0);
+    await state.updateBill(
+      billId: first.id,
+      title: 'ผ่อน',
+      amountSatang: 20000,
+      dueDate: first.dueDate,
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 4,
+      applyToFuture: false,
+    );
+    final byIndex = {for (final b in state.bills) b.occurrenceIndex: b};
+    expect(byIndex[0]!.amountSatang, 20000);
+    expect(byIndex[1]!.amountSatang, 10000);
+    expect(byIndex[2]!.amountSatang, 10000);
+  });
+
+  test('REC-09 ลบรอบนี้ + อนาคต แล้วเปิดใหม่ → ไม่คืนกลับมา', () async {
+    var state = await freshState();
+    await state.addBill(
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 5,
+    );
+    final third = state.bills.firstWhere((b) => b.occurrenceIndex == 2);
+    await state.deleteBill(third.id, includeFuture: true);
+    expect(state.bills.length, 2);
+
+    state = await reload();
+    expect(state.bills.length, 2);
+    expect(state.bills.map((b) => b.occurrenceIndex).toSet(), {0, 1});
+  });
+
+  test('REC-10 ลบรอบ 0 แล้วเปิดใหม่ → ไม่มีบิลวันที่ซ้ำ', () async {
+    var state = await freshState();
+    await state.addBill(
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 5,
+    );
+    final first = state.bills.firstWhere((b) => b.occurrenceIndex == 0);
+    await state.deleteBill(first.id);
+
+    state = await reload();
+    final dates = state.bills.map((b) => dateKey(b.dueDate)).toList()..sort();
+    expect(dates, [
+      '2026-11-30',
+      '2026-12-07',
+      '2026-12-14',
+      '2026-12-21',
+    ]);
+    expect(state.bills.map((b) => b.occurrenceIndex).toSet(), {1, 2, 3, 4});
+  });
+
+  test('REC-11 ลด repeatTimes 5→3 → ตัดรอบ 3,4 ออก', () async {
+    final state = await freshState();
+    await state.addBill(
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 5,
+    );
+    expect(state.bills.length, 5);
+    final first = state.bills.firstWhere((b) => b.occurrenceIndex == 0);
+    await state.updateBill(
+      billId: first.id,
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: first.dueDate,
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 3,
+      applyToFuture: true,
+    );
+    expect(state.bills.length, 3);
+    expect(state.bills.map((b) => b.occurrenceIndex).toSet(), {0, 1, 2});
+  });
+
+  test('REC-12 เปลี่ยนรอบกลางเป็นไม่ซ้ำ แล้วเปิดใหม่ → ไม่คืนกลับมา', () async {
+    var state = await freshState();
+    await state.addBill(
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: DateTime(2026, 11, 23),
+      repeatUnit: RepeatUnit.week,
+      repeatEvery: 1,
+      repeatTimes: 5,
+    );
+    final third = state.bills.firstWhere((b) => b.occurrenceIndex == 2);
+    await state.updateBill(
+      billId: third.id,
+      title: 'ผ่อน',
+      amountSatang: 10000,
+      dueDate: third.dueDate,
+      repeatUnit: RepeatUnit.none,
+      repeatEvery: 1,
+      repeatTimes: null,
+      applyToFuture: false,
+    );
+    state = await reload();
+    final recurring = state.bills.where((b) => b.isRecurring).toList();
+    expect(recurring.map((b) => b.occurrenceIndex).toSet(), {0, 1});
+    expect(state.bills.any((b) => !b.isRecurring && b.occurrenceIndex == 2),
+        isTrue);
+  });
 }

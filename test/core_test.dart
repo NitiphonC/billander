@@ -157,7 +157,7 @@ void main() {
       expect(restored.note, 'ใช้จากคลัง');
     });
 
-    test('CORE-15 LedgerType storage name', () {
+    test('CORE-16 LedgerType storage name', () {
       for (final type in LedgerType.values) {
         expect(LedgerTypeX.fromStorage(type.storageName), type);
       }

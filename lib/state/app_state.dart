@@ -22,9 +22,17 @@ String newId() =>
 enum PaymentResult { success, insufficient, notFound }
 
 class AppState extends ChangeNotifier {
-  AppState({AppStorage? storage}) : _db = storage ?? AppStorage.create();
+  AppState({AppStorage? storage, DateTime? todayOverride})
+      : _db = storage ?? AppStorage.create(),
+        _todayOverride =
+            todayOverride == null ? null : dateOnly(todayOverride),
+        _today = todayOverride == null
+            ? dateOnly(DateTime.now())
+            : dateOnly(todayOverride);
 
   final AppStorage _db;
+  /// ใช้กำหนด "วันนี้" ให้คงที่ในเทส (ปกติเป็น null → ใช้ DateTime.now())
+  final DateTime? _todayOverride;
   final NotificationService _notifications = NotificationService.instance;
 
   List<Bill> _bills = const [];
@@ -168,7 +176,7 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> checkDayChange() async {
-    final now = dateOnly(DateTime.now());
+    final now = _todayOverride ?? dateOnly(DateTime.now());
     final last = _settings[settingLastSeenDate];
     final changed = last != null && last != dateKey(now);
     _today = now;
@@ -278,12 +286,27 @@ class AppState extends ChangeNotifier {
         anchor = members.first;
       }
 
+      // หาวันที่ของรอบ 0 จากสมาชิกที่เหลือ — กันกรณีลบรอบ 0 แล้วระบบ
+      // สร้างรอบ 0 ขึ้นมาซ้ำที่วันของรอบเก่า (BUG-H3)
+      final firstMember = members.first;
+      final anchorDate = occurrenceDate(
+        firstMember.dueDate, unit, every, -firstMember.occurrenceIndex);
+      anchor = firstMember.copyWith(dueDate: anchorDate, occurrenceIndex: 0);
+
       final maxIndex = anchor.repeatTimes == null
           ? 300
           : anchor.repeatTimes! - 1;
-      var index = 0;
+      // high-water mark: รอบที่เคยสร้างไปแล้วทั้งหมด (แม้ผู้ใช้จะลบ/เปลี่ยนบางรอบ)
+      // ห้ามสร้างรอบที่ lower กว่านี้ขึ้นมาใหม่ — แก้ BUG-H2 (รอบที่ลบแล้วคืน)
+      final metaKey = 'series_max_${group.key}';
+      var highWater = int.tryParse(_settings[metaKey] ?? '') ??
+          (members.isEmpty
+              ? -1
+              : members.map((b) => b.occurrenceIndex).reduce(max));
+      final initialHighWater = highWater;
+      var index = highWater + 1;
       while (index <= maxIndex && index < 300) {
-        final date = occurrenceDate(anchor.dueDate, unit, every, index);
+        final date = occurrenceDate(anchorDate, unit, every, index);
         if (anchor.repeatTimes == null && date.isAfter(horizon)) break;
         if (!members.any((b) => b.occurrenceIndex == index)) {
           final created = Bill(
@@ -308,7 +331,11 @@ class AppState extends ChangeNotifier {
           _bills = [..._bills, created];
           members.add(created);
         }
+        highWater = index;
         index++;
+      }
+      if (_settings[metaKey] == null || highWater != initialHighWater) {
+        await _setSettingSilent(metaKey, highWater.toString());
       }
     }
   }
@@ -388,16 +415,33 @@ class AppState extends ChangeNotifier {
       }
     }
 
-    final shouldUpdateSeries =
-        (repeatUnit != RepeatUnit.none || applyToFuture) &&
-            original.seriesId != null &&
-            repeatUnit != RepeatUnit.none;
+    // "ใช้กับรอบในอนาคตด้วย" ต้องเป็นตัวตัดสิน — ถ้าปิดให้แก้แค่รอบที่เลือก
+    final shouldUpdateSeries = applyToFuture &&
+        original.seriesId != null &&
+        repeatUnit != RepeatUnit.none;
     final targets = shouldUpdateSeries
         ? _bills
             .where((b) =>
-                b.seriesId == original.seriesId && !b.isPaid)
+                b.seriesId == original.seriesId &&
+                !b.isPaid &&
+                b.occurrenceIndex >= original.occurrenceIndex)
             .toList()
         : <Bill>[original];
+
+    // ลดจำนวนรอบ → ตัดรอบที่เกินออก (BUG-H4)
+    if (original.seriesId != null && repeatTimes != null) {
+      final staleIds = _bills
+          .where((b) =>
+              b.seriesId == original.seriesId &&
+              !b.isPaid &&
+              b.occurrenceIndex >= repeatTimes)
+          .map((b) => b.id)
+          .toList();
+      if (staleIds.isNotEmpty) {
+        await _db.deleteBills(staleIds);
+        _bills = _bills.where((b) => !staleIds.contains(b.id)).toList();
+      }
+    }
 
     final newAnchorDate = dateOnly(dueDate);
     final updated = <Bill>[];
@@ -413,7 +457,7 @@ class AppState extends ChangeNotifier {
         repeatEvery: every,
         repeatTimes: repeatTimes,
         clearRepeatTimes: repeatTimes == null,
-        occurrenceIndex: shouldUpdateSeries ? target.occurrenceIndex : 0,
+        occurrenceIndex: target.occurrenceIndex,
         saveAheadMonths:
             saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
         clearSaveAheadMonths: saveAheadMonths == null,

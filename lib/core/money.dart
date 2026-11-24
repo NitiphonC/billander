@@ -22,9 +22,16 @@ class Money {
   static String format(int satang) => _formatter.format(toBaht(satang));
 
   static String formatCompact(int satang) {
-    final v = toBaht(satang);
-    if (v.abs() >= 1000000) return '฿${(v / 1000000).toStringAsFixed(1)}ล้าน';
-    if (v.abs() >= 10000) return '฿${(v / 1000).toStringAsFixed(1)}k';
+    final abs = satang.abs();
+    // ใช้เลขสตางค์ (int) เป็นหลัก เพื่อไม่ให้ double เพี้ยนที่ยอดใหญ่ ๆ
+    if (abs >= 1000000 * perBaht) {
+      final millions = abs / (1000000 * perBaht);
+      return '฿${millions.toStringAsFixed(1)}ล้าน';
+    }
+    if (abs >= 10000 * perBaht) {
+      final thousands = abs / (1000 * perBaht);
+      return '฿${thousands.toStringAsFixed(1)}k';
+    }
     return format(satang);
   }
 
