@@ -5,6 +5,7 @@ import '../core/date_utils.dart';
 import '../core/money.dart';
 import '../models/bill.dart';
 import '../state/app_state.dart';
+import 'design_system.dart';
 import 'widgets/bill_icon.dart';
 import 'widgets/common.dart';
 
@@ -24,7 +25,7 @@ class DashboardScreen extends StatelessWidget {
 
     return SafeArea(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: AppSpace.screenPadding,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -47,7 +48,7 @@ class DashboardScreen extends StatelessWidget {
                   onPressed: () => _showHelp(context),
                   child: const Text('วิธีใช้'),
                 ),
-                const SizedBox(width: 4),
+                const SizedBox(width: AppSpace.xs),
                 IconButton.filledTonal(
                   tooltip: 'ตรวจสอบอัปเดต',
                   onPressed: () async {
@@ -65,7 +66,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             if (state.availableUpdate != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
@@ -73,7 +74,7 @@ class DashboardScreen extends StatelessWidget {
                   onTap: () => state.openUpdateDownload(),
                   borderRadius: BorderRadius.circular(12),
                   child: Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpace.md),
                     decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.tertiaryContainer,
                       borderRadius: BorderRadius.circular(12),
@@ -81,7 +82,7 @@ class DashboardScreen extends StatelessWidget {
                     child: Row(
                       children: [
                         const Icon(Icons.system_update),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: AppSpace.md),
                         Expanded(
                           child: Text(
                             'มีเวอร์ชันใหม่ ${state.availableUpdate!.versionName} '
@@ -95,7 +96,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
             _heroCard(context, plan),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             Row(
               children: [
                 Expanded(
@@ -105,7 +106,7 @@ class DashboardScreen extends StatelessWidget {
                     label: const Text('เก็บวันนี้'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpace.sm),
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _recordWithdrawal(context),
@@ -115,15 +116,15 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpace.lg),
             SectionCard(
               title: 'บิลที่รอจ่าย (${plan.bills.length})',
               child: _billList(context, plan),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             _DailyPlanCard(state: state),
             if (state.userError != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpace.md),
               Text(
                 state.userError!,
                 style: TextStyle(color: theme.colorScheme.error),
@@ -138,39 +139,41 @@ class DashboardScreen extends StatelessWidget {
   void _showHelp(BuildContext context) {
     showDialog<void>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('วิธีใช้แอป'),
-        content: const SingleChildScrollView(
+      builder: (dialogContext) => AlertDialog(
+        title: Text('วิธีใช้แอป', style: AppType.title(dialogContext)),
+        content: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('1. เพิ่มบิล', style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text('แท็บ "บิล" → กด + → ใส่ชื่อบิล จำนวนเงิน และวันที่จ่าย'),
-              SizedBox(height: 12),
+              Text('1. เพิ่มบิล', style: AppType.label(dialogContext)),
+              const SizedBox(height: AppSpace.sm),
+              Text('แท็บ "บิล" → กด + → ใส่ชื่อบิล จำนวนเงิน และวันที่จ่าย',
+                  style: AppType.body(dialogContext)),
+              const SizedBox(height: AppSpace.lg),
               Text('2. เก็บเงินตามยอดที่แอปบอก',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+                  style: AppType.label(dialogContext)),
+              const SizedBox(height: AppSpace.sm),
               Text(
                 'หน้าภาพรวมบอกว่าวันนี้ต้องใส่เงินเท่าไหร่ — กด "เก็บวันนี้" '
                 'เพื่อบันทึก เงินจะอยู่ใน "คลัง" รอจ่ายตอนถึงกำหนด',
+                style: AppType.body(dialogContext),
               ),
-              SizedBox(height: 12),
-              Text('3. ดูวันที่ต้องเก็บ',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+              const SizedBox(height: AppSpace.lg),
+              Text('3. ดูวันที่ต้องเก็บ', style: AppType.label(dialogContext)),
+              const SizedBox(height: AppSpace.sm),
               Text(
                 'แท็บ "ปฏิทิน" โชว์ยอดที่ต้องเก็บแต่ละวัน '
                 '(แตะวันเพื่อดูว่ามาจากบิลไหน)',
+                style: AppType.body(dialogContext),
               ),
-              SizedBox(height: 12),
-              Text('4. ตั้งค่าถ้าต้องการ',
-                  style: TextStyle(fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
+              const SizedBox(height: AppSpace.lg),
+              Text('4. ตั้งค่าถ้าต้องการ', style: AppType.label(dialogContext)),
+              const SizedBox(height: AppSpace.sm),
               Text(
                 'แท็บ "ตั้งค่า" แก้เงินในคลังได้โดยตรง '
                 'และเปลี่ยนระยะเก็บล่วงหน้าที่ใช้กับทุกบิล',
+                style: AppType.body(dialogContext),
               ),
             ],
           ),
@@ -199,12 +202,12 @@ class DashboardScreen extends StatelessWidget {
         ),
         borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: AppSpace.heroPadding,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('ต้องเก็บวันนี้', style: TextStyle(color: Colors.white70)),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpace.xs),
           Text(
             Money.format(plan.dailyRequiredSatang),
             style: theme.textTheme.displaySmall?.copyWith(
@@ -212,19 +215,19 @@ class DashboardScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: AppSpace.sm),
           Text(
             plan.note ?? '',
             style: const TextStyle(color: Colors.white70),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpace.xs),
           Text(
             'เริ่มเก็บล่วงหน้า ${state.defaultSaveAheadMonths} '
             '${state.defaultSaveAheadUnit.label} (รวมวันจ่าย)'
             '${plan.excludedCount > 0 ? ' · ${plan.excludedCount} บิลยังไม่เข้าช่วง' : ''}',
-            style: const TextStyle(color: Colors.white70, fontSize: 11),
+            style: AppType.statLabel(context).copyWith(color: Colors.white70),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           ClipRRect(
             borderRadius: BorderRadius.circular(8),
             child: LinearProgressIndicator(
@@ -234,13 +237,15 @@ class DashboardScreen extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: AppSpace.lg),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _stat('ในคลัง', Money.formatCompact(plan.poolSatang)),
-              _stat('ต้องจ่ายรวม', Money.formatCompact(plan.totalOutstandingSatang)),
+              _stat(context, 'ในคลัง', Money.formatCompact(plan.poolSatang)),
+              _stat(context, 'ต้องจ่ายรวม',
+                  Money.formatCompact(plan.totalOutstandingSatang)),
               _stat(
+                context,
                 'วันถึงบิลแรก',
                 plan.isEmpty ? '-' : '${plan.daysToEarliestDue} วัน',
               ),
@@ -251,15 +256,16 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _stat(String label, String value) {
+  Widget _stat(BuildContext context, String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: const TextStyle(fontSize: 11, color: Colors.white70)),
-        const SizedBox(height: 2),
+            style: AppType.statLabel(context)
+                .copyWith(color: Colors.white70)),
+        const SizedBox(height: AppSpace.xs),
         Text(value,
-            style: const TextStyle(
+            style: AppType.label(context).copyWith(
                 color: Colors.white, fontWeight: FontWeight.w700)),
       ],
     );
@@ -268,14 +274,14 @@ class DashboardScreen extends StatelessWidget {
   Widget _billList(BuildContext context, SavingsPlan plan) {
     if (plan.bills.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: AppSpace.lg),
         child: Column(
           children: [
             Text(
               'ยังไม่มีบิลที่ต้องจ่าย',
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpace.sm),
             const Text(
               'เริ่มใช้งาน 3 ขั้นตอน:\n'
               '1. กดแท็บ "บิล" → กด + เพื่อเพิ่มบิล\n'

@@ -5,6 +5,7 @@ import '../core/money.dart';
 import '../data/database.dart';
 import '../models/bill.dart';
 import '../state/app_state.dart';
+import 'design_system.dart';
 import 'widgets/common.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -46,7 +47,7 @@ class SettingsScreen extends StatelessWidget {
         state.bills.where((b) => b.saveAheadMonths != null).toList();
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: AppSpace.screenPadding,
         children: [
           Text(
             'ตั้งค่า',
@@ -54,7 +55,7 @@ class SettingsScreen extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'คลังเงิน',
             child: Column(
@@ -67,13 +68,13 @@ class SettingsScreen extends StatelessWidget {
                     color: theme.colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpace.xs),
                 const Text(
                   'เงินที่เก็บไว้แล้ว ตรงกับ "ในคลัง" ในหน้าภาพรวม\n'
                   'กดปุ่มด้านล่างเพื่อแก้จำนวนเงินได้เลย '
                   '(ประวัติเก็บ/ใช้/จ่ายเดิมยังอยู่ครบ)',
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
                   onPressed: () => _editPoolBalance(context),
                   icon: const Icon(Icons.edit_outlined),
@@ -82,7 +83,7 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'ระยะเก็บล่วงหน้า (ค่าตั้งต้น)',
             child: Column(
@@ -96,7 +97,7 @@ class SettingsScreen extends StatelessWidget {
                     color: theme.colorScheme.primary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpace.xs),
                 const Text(
                   'แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
                   '(นับวันจ่ายเป็น 1 วัน) — เช่น ตั้ง 1 วัน = โชว์ยอดเฉพาะวันจ่าย, '
@@ -104,7 +105,7 @@ class SettingsScreen extends StatelessWidget {
                   'บิลที่อยู่ไกลกว่านี้ยังไม่นำมาเก็บ '
                   '(ตั้งแยกได้ในหน้าแก้บิล)',
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
                   onPressed: () async {
                     final result = await showSaveAheadDialog(
@@ -132,18 +133,18 @@ class SettingsScreen extends StatelessWidget {
                   label: const Text('เปลี่ยนค่าตั้งต้น'),
                 ),
                 if (finalOverrides.isNotEmpty) ...[
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppSpace.md),
                   Text(
                     'บิลที่ตั้งแยกไว้ (ไม่ตามค่าตั้งต้น)',
                     style: theme.textTheme.labelLarge,
                   ),
                   for (final bill in finalOverrides)
                     Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: AppSpace.xs),
                       child: Row(
                         children: [
                           const Icon(Icons.tune, size: 14),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: AppSpace.sm),
                           Expanded(child: Text(bill.title)),
                           Text(
                             '${bill.saveAheadMonths} '
@@ -154,7 +155,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                 ] else
                   Padding(
-                    padding: const EdgeInsets.only(top: 8),
+                    padding: const EdgeInsets.only(top: AppSpace.sm),
                     child: Text(
                       'ยังไม่มีบิลที่ตั้งแยก — ทุกบิลใช้ค่าตั้งต้น',
                       style: theme.textTheme.bodySmall,
@@ -163,7 +164,7 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'แจ้งเตือนรายวัน',
             child: Column(
@@ -192,7 +193,7 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'อัปเดตแอพ (ไม่เสียเงิน)',
             child: Column(
@@ -204,12 +205,12 @@ class SettingsScreen extends StatelessWidget {
                       : state.updateUrl,
                   style: theme.textTheme.bodySmall,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: AppSpace.xs),
                 Text(
                   'ตัวอย่าง: $kUpdateJsonHelp',
                   style: theme.textTheme.bodySmall,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
                   onPressed: () async {
                     final value = await showTextDialog(
@@ -245,7 +246,7 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'วิธีคำนวณ',
             child: Text(

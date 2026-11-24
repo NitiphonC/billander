@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/date_utils.dart';
 import '../core/money.dart';
+import 'design_system.dart';
 import 'icon_draw_screen.dart';
 import '../models/bill.dart';
 import '../state/app_state.dart';
@@ -28,7 +29,7 @@ class BillsScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 88),
+          padding: AppSpace.actionScreenPadding,
           children: [
             Text(
               'บิลทั้งหมด',
@@ -36,7 +37,7 @@ class BillsScreen extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             SectionCard(
               title: 'รอจ่าย (${active.length})',
               child: active.isEmpty
@@ -47,7 +48,7 @@ class BillsScreen extends StatelessWidget {
                       ],
                     ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             SectionCard(
               title: 'จ่ายแล้ว (${paid.length})',
               child: paid.isEmpty
@@ -224,7 +225,7 @@ class BillEditorSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+      padding: AppSpace.sheetPadding,
       child: _BillEditorForm(
         state: state,
         bill: bill,
@@ -399,15 +400,15 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                   fontWeight: FontWeight.bold,
                 ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpace.xs),
           const Text(
             'บอกจำนวนเงิน วันที่จ่าย และความถี่ '
             'แอปจะคำนวณเองว่าต้องเก็บวันละเท่าไหร่',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.lg),
           if (_saveError != null)
             Padding(
-              padding: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.only(bottom: AppSpace.sm),
               child: Text(
                 _saveError!,
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
@@ -423,7 +424,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'กรอกชื่อบิล' : null,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           TextFormField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -439,7 +440,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               return null;
             },
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           InkWell(
             onTap: _pickDate,
             borderRadius: BorderRadius.circular(12),
@@ -448,7 +449,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               child: Row(
                 children: [
                   const Icon(Icons.calendar_today_outlined),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpace.md),
                   Text(
                     '${_repeatUnit == RepeatUnit.none
                         ? 'วันที่ต้องจ่าย'
@@ -458,12 +459,12 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          const Text(
+          const SizedBox(height: AppSpace.xs),
+          Text(
             'แตะเพื่อเปลี่ยนวัน · วันจ่ายก็ถือเป็นวันเก็บด้วยเสมอ',
-            style: TextStyle(fontSize: 12),
+            style: AppType.caption(context),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           DropdownButtonFormField<RepeatUnit>(
             initialValue: _repeatUnit,
             decoration: const InputDecoration(
@@ -480,11 +481,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             },
           ),
           if (_repeatUnit != RepeatUnit.none) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             Row(
               children: [
                 const Text('ทุก'),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpace.sm),
                 SizedBox(
                   width: 70,
                   child: TextFormField(
@@ -502,11 +503,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                     },
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpace.sm),
                 Text(_repeatUnit == RepeatUnit.week ? 'สัปดาห์' : 'เดือน'),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('จ่ายไปเรื่อย ๆ (ไม่มีรอบสุดท้าย)'),
@@ -531,7 +532,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                   return null;
                 },
               ),
-            const SizedBox(height: 4),
+            const SizedBox(height: AppSpace.xs),
             Text(
               _forever
                   ? 'ระบบจะสร้างบิลต่อไปเรื่อย ๆ (แสดงล่วงหน้า 1 ปี)'
@@ -539,13 +540,13 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
-          const SizedBox(height: 12),
-          const Text(
+          const SizedBox(height: AppSpace.md),
+          Text(
             'ระยะเก็บล่วงหน้า = แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหน '
             '(นับวันจ่ายเป็น 1 วันด้วย)',
-            style: TextStyle(fontSize: 12),
+            style: AppType.caption(context),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.sm),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
             title: const Text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล'),
@@ -576,7 +577,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 if (v != null) setState(() => _saveAheadUnit = v);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             TextFormField(
               controller: _aheadController,
               keyboardType: TextInputType.number,
@@ -621,11 +622,11 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               value: _applyToFuture,
               onChanged: (v) => setState(() => _applyToFuture = v),
             ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           Row(
             children: [
               BillIconBadge(bill: _previewBill(), size: 56),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpace.md),
               Expanded(
                 child: Text(
                   'ไอคอนบิล',
@@ -636,12 +637,12 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          const Text(
+          const SizedBox(height: AppSpace.xs),
+          Text(
             'ไม่บังคับ — ใส่ตัวอักษรหรือวาดรูปเพื่อจำบิลได้ง่ายขึ้น',
-            style: TextStyle(fontSize: 12),
+            style: AppType.caption(context),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.sm),
           TextFormField(
             controller: _iconTextController,
             maxLength: 3,
@@ -651,7 +652,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
               border: OutlineInputBorder(),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.sm),
           Wrap(
             spacing: 10,
             children: [
@@ -705,7 +706,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                 child: const Text('ลบภาพวาด'),
               ),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.sm),
           FilledButton.icon(
             onPressed: _save,
             icon: const Icon(Icons.save_outlined),

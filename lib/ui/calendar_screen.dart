@@ -7,6 +7,7 @@ import '../models/bill.dart';
 import '../models/ledger_entry.dart';
 import '../state/app_state.dart';
 import 'bills_screen.dart' show BillEditorSheet;
+import 'design_system.dart';
 import 'widgets/common.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -19,42 +20,49 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  late DateTime _month;
+  /// เรียงเดือนจากเดือนปัจจุบันไปข้างหน้า — ผู้ใช้เลื่อนขึ้น/ลงได้ต่อเนื่อง
+  static const _futureMonths = 24;
+
+  late final ScrollController _scrollController;
+  late final List<DateTime> _months;
   Map<String, int> _dailyByDate = {};
   Map<String, List<ProjectionContribution>> _breakdownByDate = {};
 
   @override
   void initState() {
     super.initState();
-    _month = firstDayOfMonth(widget.state.today);
+    final first = firstDayOfMonth(widget.state.today);
+    _months = [
+      for (var i = 0; i <= _futureMonths; i++)
+        DateTime(first.year, first.month + i, 1),
+    ];
+    _scrollController = ScrollController();
   }
 
-  void _changeMonth(int delta) {
-    setState(() => _month = DateTime(_month.year, _month.month + delta, 1));
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _backToToday() {
+    _scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final bills = widget.state.billsForMonth(_month);
-    final billsByDate = <String, List<Bill>>{};
-    for (final bill in bills) {
-      (billsByDate[dateKey(bill.dueDate)] ??= <Bill>[]).add(bill);
-    }
-
-    final leadingBlanks = DateTime(_month.year, _month.month, 1).weekday % 7;
-    final totalDays = daysInMonth(_month);
-    final todayKey = dateKey(widget.state.today);
-
-    // ยอดที่ต้องเก็บรายวันสำหรับวันในอนาคต (คำนวณจากคลังปัจจุบัน)
+    // ยอดที่ต้องเก็บรายวัน — ปฏิทินใช้คลังจริง ไม่จำลองการเก็บ/จ่ายในอนาคต
     final projection = Calculator.project(
       bills: widget.state.bills,
       poolSatang: widget.state.poolSatang,
       today: widget.state.today,
-      // ครอบลิมิตแบบปี/อัปเดตไม่จำกัดได้ด้วย (เดิม 120 วัน → บิลไกลหาย)
       maxDays: 1830,
       defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
       defaultSaveAheadUnit: widget.state.defaultSaveAheadUnit,
-      // ปฏิทินใช้คลังจริงทุกวัน ไม่จำลองการเก็บ/จ่ายในอนาคต
       simulateFutureSavings: false,
     );
     final dailyByDate = {
@@ -62,115 +70,140 @@ class _CalendarScreenState extends State<CalendarScreen> {
     };
     _dailyByDate = dailyByDate;
     _breakdownByDate = {
-      for (final item in projection)
-        dateKey(item.date): item.contributions,
+      for (final item in projection) dateKey(item.date): item.contributions,
     };
-    final entriesByDay = <String, List<LedgerEntry>>{};
-    for (final entry in widget.state.entriesForMonth(_month)) {
-      (entriesByDay[dateKey(entry.date)] ??= <LedgerEntry>[]).add(entry);
-    }
+    final todayKey = dateKey(widget.state.today);
 
     return SafeArea(
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-            child: Row(
-              children: [
-                IconButton.filledTonal(
-                  onPressed: () => _changeMonth(-1),
-                  icon: const Icon(Icons.chevron_left),
-                ),
-                Expanded(
-                  child: Text(
-                    '${thaiMonths[_month.month - 1]} ${_month.year + 543}',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                ),
-                IconButton.filledTonal(
-                  onPressed: () => _changeMonth(1),
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: () => setState(
-                () => _month = firstDayOfMonth(widget.state.today)),
-            child: const Text('กลับไปวันนี้'),
-          ),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              'ตัวเลขในแต่ละวัน = ยอดที่ต้องเก็บในวันนั้น · แตะเพื่อดูว่ามาจากบิลไหน',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Row(
-              children: [
-                for (final label in thaiWeekdaysShort)
+      child: CustomScrollView(
+        controller: _scrollController,
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpace.lg, AppSpace.sm, AppSpace.lg, AppSpace.md,
+              ),
+              child: Row(
+                children: [
                   Expanded(
                     child: Text(
-                      label,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelMedium,
+                      'เลื่อนขึ้น–ลงเพื่อเปลี่ยนเดือน · แตะวันเพื่อดูยอด',
+                      style: AppType.caption(context),
                     ),
                   ),
-              ],
+                  TextButton(
+                    onPressed: _backToToday,
+                    child: const Text('กลับไปวันนี้'),
+                  ),
+                ],
+              ),
             ),
           ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 7,
-                childAspectRatio: 0.82,
-                mainAxisSpacing: 4,
-                crossAxisSpacing: 4,
-              ),
-              itemCount: leadingBlanks + totalDays,
-              itemBuilder: (context, index) {
-                if (index < leadingBlanks) return const SizedBox.shrink();
-                final day = index - leadingBlanks + 1;
-                final date = DateTime(_month.year, _month.month, day);
-                final key = dateKey(date);
-                final dayBills = billsByDate[key] ?? const <Bill>[];
-                final isToday = key == todayKey;
-                final isOverdue = dayBills.any((b) =>
-                    !b.isPaid && b.dueDate.isBefore(widget.state.today));
-                final hasUnpaid = dayBills.any((b) => !b.isPaid);
-                final isPast = date.isBefore(widget.state.today);
-                final dailySatang = dailyByDate[key] ?? 0;
-                final dayEntries = entriesByDay[key] ?? const <LedgerEntry>[];
-
-                return _dayCell(
-                  context: context,
-                  day: day,
-                  isToday: isToday,
-                  isPast: isPast,
-                  dailySatang: dailySatang,
-                  hasBill: dayBills.isNotEmpty,
-                  hasPaidBill: dayBills.any((b) => b.isPaid),
-                  hasDeposit:
-                      dayEntries.any((e) => e.type == LedgerType.deposit),
-                  hasWithdrawal: dayEntries
-                      .any((e) => e.type == LedgerType.withdrawal),
-                  isOverdue: isOverdue,
-                  hasUnpaid: hasUnpaid,
-                  onTap: () => _showDayDetails(context, date, dayBills),
-                );
-              },
-            ),
+          SliverList.builder(
+            itemCount: _months.length,
+            itemBuilder: (context, index) =>
+                _monthSection(context, _months[index], dailyByDate, todayKey),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _monthSection(
+    BuildContext context,
+    DateTime month,
+    Map<String, int> dailyByDate,
+    String todayKey,
+  ) {
+    final billsByDate = <String, List<Bill>>{};
+    for (final bill in widget.state.billsForMonth(month)) {
+      (billsByDate[dateKey(bill.dueDate)] ??= <Bill>[]).add(bill);
+    }
+    final entriesByDay = <String, List<LedgerEntry>>{};
+    for (final entry in widget.state.entriesForMonth(month)) {
+      (entriesByDay[dateKey(entry.date)] ??= <LedgerEntry>[]).add(entry);
+    }
+    final leadingBlanks = DateTime(month.year, month.month, 1).weekday % 7;
+    final totalDays = daysInMonth(month);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpace.sm),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            '${thaiMonths[month.month - 1]} ${month.year + 543}',
+            textAlign: TextAlign.center,
+            style: AppType.title(context),
+          ),
+          const SizedBox(height: AppSpace.sm),
+          Row(
+            children: [
+              for (final label in thaiWeekdaysShort)
+                Expanded(
+                  child: Text(
+                    label,
+                    textAlign: TextAlign.center,
+                    style: AppType.caption(context),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.xs),
+          GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 7,
+            childAspectRatio: 0.82,
+            mainAxisSpacing: AppSpace.xs,
+            crossAxisSpacing: AppSpace.xs,
+            children: [
+              for (var i = 0; i < leadingBlanks; i++)
+                const SizedBox.shrink(),
+              for (var day = 1; day <= totalDays; day++) _dayCellFor(
+                context: context,
+                month: month,
+                day: day,
+                dailyByDate: dailyByDate,
+                billsByDate: billsByDate,
+                entriesByDay: entriesByDay,
+                todayKey: todayKey,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.lg),
+        ],
+      ),
+    );
+  }
+
+  Widget _dayCellFor({
+    required BuildContext context,
+    required DateTime month,
+    required int day,
+    required Map<String, int> dailyByDate,
+    required Map<String, List<Bill>> billsByDate,
+    required Map<String, List<LedgerEntry>> entriesByDay,
+    required String todayKey,
+  }) {
+    final date = DateTime(month.year, month.month, day);
+    final key = dateKey(date);
+    final dayBills = billsByDate[key] ?? const <Bill>[];
+    final dayEntries = entriesByDay[key] ?? const <LedgerEntry>[];
+    return _dayCell(
+      context: context,
+      day: day,
+      isToday: key == todayKey,
+      isPast: date.isBefore(widget.state.today),
+      dailySatang: dailyByDate[key] ?? 0,
+      hasBill: dayBills.isNotEmpty,
+      hasPaidBill: dayBills.any((b) => b.isPaid),
+      hasDeposit: dayEntries.any((e) => e.type == LedgerType.deposit),
+      hasWithdrawal: dayEntries.any((e) => e.type == LedgerType.withdrawal),
+      isOverdue: dayBills.any((b) =>
+          !b.isPaid && b.dueDate.isBefore(widget.state.today)),
+      hasUnpaid: dayBills.any((b) => !b.isPaid),
+      onTap: () => _showDayDetails(context, date, dayBills),
     );
   }
 
@@ -197,10 +230,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppRadius.md),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppRadius.md),
           border: isToday
               ? Border.all(color: theme.colorScheme.primary, width: 2)
               : null,
@@ -213,19 +246,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
           children: [
             Text(
               '$day',
-              style: TextStyle(
-                fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
+              style: AppType.label(context).copyWith(
+                fontWeight: isToday ? FontWeight.bold : FontWeight.w500,
                 color: isToday ? theme.colorScheme.primary : null,
               ),
             ),
             if (!isPast && dailySatang > 0)
               Text(
                 Money.formatCompact(dailySatang),
-                style: TextStyle(
-                  fontSize: 9,
-                  color: theme.colorScheme.primary,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppType.calendarAmount(context),
               ),
             if (isPast) ...[
               if (hasPaidBill)
@@ -258,7 +287,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       builder: (sheetContext) {
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            padding: AppSpace.sheetPadding,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -270,11 +299,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpace.md),
                   if (!date.isBefore(widget.state.today) &&
                       (_dailyByDate[dateKey(date)] ?? 0) > 0)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.only(bottom: AppSpace.md),
                       child: Text(
                         'วันนี้ต้องเก็บ ${Money.format(_dailyByDate[dateKey(date)] ?? 0)}',
                         style: Theme.of(sheetContext)
@@ -292,21 +321,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       'ยอดที่ต้องเก็บวันนี้มาจาก',
                       style: Theme.of(sheetContext).textTheme.titleMedium,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpace.xs),
                     for (final item in contributions)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpace.xs,
+                        ),
                         child: Row(
                           children: [
                             const Icon(Icons.subdirectory_arrow_right, size: 14),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: AppSpace.sm),
                             Expanded(child: Text(item.title)),
                             Text(Money.format(item.amountSatang)),
                           ],
                         ),
                       ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppSpace.sm,
+                      ),
                       child: Text(
                         'รวม ${Money.format(_dailyByDate[dateKey(date)] ?? 0)}',
                         style: TextStyle(
@@ -369,7 +402,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       style: Theme.of(sheetContext).textTheme.titleMedium),
                   if (entries.isEmpty) const Text('ยังไม่มีบันทึก'),
                   for (final entry in entries) _entryTile(entry),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AppSpace.lg),
                   FilledButton.icon(
                     onPressed: () {
                       Navigator.pop(sheetContext);

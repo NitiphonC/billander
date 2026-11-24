@@ -1,6 +1,6 @@
 {
-  "versionCode": 18,
-  "versionName": "0.1.17",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.17/app-arm64-v8a-release.apk",
-  "notes": "UX สำหรับผู้ใช้ครั้งแรก: ปุ่มวิธีใช้ที่เห็นชัด, คำแนะนำ 3 ขั้นตอน, ตัวอย่างกรอกข้อมูลในทุกช่อง, อธิบายระยะเก็บล่วงหน้าเข้าใจง่าย"
+  "versionCode": 19,
+  "versionName": "0.1.18",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.18/app-arm64-v8a-release.apk",
+  "notes": "มาตรฐานการออกแบบกลาง (spacing/typography/radius) ใช้ตรงกันทุกหน้า + ปฏิทินเลื่อนแนวตั้ง ไม่มีปุ่มซ้ายขวา"
 }

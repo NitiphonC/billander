@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/money.dart';
 import '../../models/bill.dart';
+import '../design_system.dart';
 
 class SectionCard extends StatelessWidget {
   const SectionCard({
@@ -9,7 +10,7 @@ class SectionCard extends StatelessWidget {
     required this.title,
     this.child,
     this.action,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = AppSpace.cardPadding,
   });
 
   final String title;
@@ -40,7 +41,7 @@ class SectionCard extends StatelessWidget {
                 if (action != null) action!,
               ],
             ),
-            if (child != null) const SizedBox(height: 12),
+            if (child != null) const SizedBox(height: AppSpace.md),
             if (child != null) child!,
           ],
         ),
@@ -270,12 +271,12 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'เริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
               '(นับวันจ่ายเป็น 1 วันด้วย)',
-              style: TextStyle(fontSize: 12),
+              style: AppType.caption(context),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             DropdownButtonFormField<SaveAheadUnit>(
               initialValue: _unit,
               decoration: const InputDecoration(
@@ -290,7 +291,7 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
                 if (v != null) setState(() => _unit = v);
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.md),
             TextFormField(
               controller: _controller,
               autofocus: true,

@@ -4,6 +4,8 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
+import 'design_system.dart';
+
 /// หน้าวาดไอคอนบิลด้วยนิ้ว แล้วส่งกลับเป็น base64 PNG
 class IconDrawScreen extends StatefulWidget {
   const IconDrawScreen({super.key});
@@ -91,7 +93,7 @@ class _IconDrawScreenState extends State<IconDrawScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: AppSpace.cardPadding,
           child: Column(
             children: [
               Container(
@@ -130,7 +132,7 @@ class _IconDrawScreenState extends State<IconDrawScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpace.lg),
               Wrap(
                 spacing: 12,
                 children: [
@@ -151,7 +153,7 @@ class _IconDrawScreenState extends State<IconDrawScreen> {
                     ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpace.md),
               Slider(
                 min: 4,
                 max: 24,
@@ -160,7 +162,7 @@ class _IconDrawScreenState extends State<IconDrawScreen> {
                 label: '${_penWidth.toInt()}',
                 onChanged: (v) => setState(() => _penWidth = v),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpace.lg),
               FilledButton.icon(
                 onPressed: () async {
                   final data = await _export();

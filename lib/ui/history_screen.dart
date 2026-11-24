@@ -4,6 +4,7 @@ import '../core/date_utils.dart';
 import '../core/money.dart';
 import '../models/ledger_entry.dart';
 import '../state/app_state.dart';
+import 'design_system.dart';
 import 'widgets/common.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -51,7 +52,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: AppSpace.screenPadding,
         children: [
           Row(
             children: [
@@ -76,35 +77,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'สรุปเดือนนี้',
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _summary('เก็บได้', Money.formatCompact(deposit), Colors.green),
-                _summary('ใช้ไป', Money.formatCompact(withdrawn), Colors.red),
-                _summary('จ่ายบิล', Money.formatCompact(paid), Colors.orange),
+                _summary(context, 'เก็บได้', Money.formatCompact(deposit),
+                    Colors.green),
+                _summary(
+                    context, 'ใช้ไป', Money.formatCompact(withdrawn), Colors.red),
+                _summary(context, 'จ่ายบิล', Money.formatCompact(paid),
+                    Colors.orange),
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.sm),
           Text(
             'วันที่ไม่ได้บันทึก $missedDays วัน (ระบบคำนวณยอดต่อวันเพิ่มขึ้นอัตโนมัติ)',
             style: Theme.of(context).textTheme.bodySmall,
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpace.md),
           if (monthEntries.isEmpty)
             const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
+              padding: EdgeInsets.symmetric(vertical: AppSpace.xxxl),
               child: Text('ยังไม่มีประวัติ', textAlign: TextAlign.center),
             ),
           for (final group in grouped.entries)
             Card(
               elevation: 0,
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpace.md,
+                  vertical: AppSpace.sm,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -125,11 +132,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _summary(String label, String value, Color color) {
+  Widget _summary(BuildContext context, String label, String value, Color color) {
     return Column(
       children: [
-        Text(label, style: const TextStyle(fontSize: 11)),
-        const SizedBox(height: 2),
+        Text(label, style: AppType.statLabel(context)),
+        const SizedBox(height: AppSpace.xs),
         Text(value,
             style: TextStyle(color: color, fontWeight: FontWeight.bold)),
       ],
