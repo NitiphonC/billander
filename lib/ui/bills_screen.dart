@@ -8,6 +8,7 @@ import '../models/bill.dart';
 import '../state/app_state.dart';
 import 'widgets/bill_icon.dart';
 import 'widgets/common.dart';
+import 'widgets/info_button.dart';
 
 class BillsScreen extends StatelessWidget {
   const BillsScreen({super.key, required this.state});
@@ -398,9 +399,8 @@ class _BillEditorFormState extends State<_BillEditorForm> {
           ),
           const SizedBox(height: AppSpace.sm),
           Text(
-            'บอกจำนวนเงิน วันที่จ่าย และความถี่ '
-            'แอปจะคำนวณเองว่าต้องเก็บวันละเท่าไหร่',
-            style: AppType.muted(context),
+            'ใส่ชื่อ จำนวนเงิน วันที่จ่าย — แอปคำนวณยอดต่อวันให้',
+            style: AppType.caption(context),
           ),
           const SizedBox(height: AppSpace.lg),
           if (_saveError != null)
@@ -542,9 +542,23 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             ),
           ],
           const SizedBox(height: AppSpace.md),
+          Row(
+            children: [
+              Text('ระยะเก็บล่วงหน้า', style: AppType.label(context)),
+              const SizedBox(width: AppSpace.xs),
+              const AppInfoButton(
+                title: 'ระยะเก็บล่วงหน้าคืออะไร',
+                body: 'แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
+                    '(นับวันจ่ายเป็น 1 วันด้วย)\n\n'
+                    '• ใส่ 1 = เก็บเฉพาะวันจ่าย\n'
+                    '• ใส่ 7 = เก็บ 7 วันสุดท้ายก่อนจ่าย (วันจ่าย + อีก 6 วัน)\n\n'
+                    'ปิดสวิตช์ "ใช้ค่าที่ตั้งไว้ให้ทุกบิล" เพื่อตั้งเฉพาะบิลนี้',
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpace.xs),
           Text(
-            'ระยะเก็บล่วงหน้า = แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหน '
-            '(นับวันจ่ายเป็น 1 วันด้วย)',
+            'นับวันจ่ายเป็น 1 วันด้วย',
             style: AppType.caption(context),
           ),
           const SizedBox(height: AppSpace.sm),

@@ -152,7 +152,7 @@ void main() {
           tester.renderObject<RenderParagraph>(f).text.style!;
       final title = painted(find.text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล'));
       final caption = painted(
-        find.textContaining('ระยะเก็บล่วงหน้า ='),
+        find.text('นับวันจ่ายเป็น 1 วันด้วย'),
       );
 
       expect(title.fontSize, 14);

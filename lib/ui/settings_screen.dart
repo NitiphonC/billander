@@ -7,6 +7,7 @@ import '../models/bill.dart';
 import '../state/app_state.dart';
 import 'design_system.dart';
 import 'widgets/common.dart';
+import 'widgets/info_button.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key, required this.state});
@@ -56,6 +57,14 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'คลังเงิน',
+            action: const AppInfoButton(
+              title: 'คลังเงินคืออะไร',
+              body: 'เงินที่คุณเก็บไว้แล้ว ตรงกับคำว่า "ในคลัง" ในหน้าภาพรวม\n\n'
+                  'แอปจะนำเงินนี้ไปหักบิลที่ใกล้กำหนดที่สุดก่อน '
+                  'ส่วนที่ยังไม่พอจะกลายเป็นยอดที่ต้องเก็บเพิ่ม\n\n'
+                  'กด "ปรับเงินในคลัง" เพื่อแก้จำนวนได้โดยตรง '
+                  'ประวัติการเก็บ/ใช้/จ่ายเดิมยังอยู่ครบทุกรายการ',
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -66,10 +75,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpace.sm),
                 Text(
-                  'เงินที่เก็บไว้แล้ว ตรงกับ "ในคลัง" ในหน้าภาพรวม\n'
-                  'กดปุ่มด้านล่างเพื่อแก้จำนวนเงินได้เลย '
-                  '(ประวัติเก็บ/ใช้/จ่ายเดิมยังอยู่ครบ)',
-                  style: AppType.muted(context),
+                  'ตรงกับ "ในคลัง" ในหน้าภาพรวม · แก้ได้ที่ปุ่มด้านล่าง',
+                  style: AppType.caption(context),
                 ),
                 const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
@@ -83,6 +90,15 @@ class SettingsScreen extends StatelessWidget {
           const SizedBox(height: AppSpace.md),
           SectionCard(
             title: 'ระยะเก็บล่วงหน้า (ค่าตั้งต้น)',
+            action: const AppInfoButton(
+              title: 'ระยะเก็บล่วงหน้าคืออะไร',
+              body: 'แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
+                  '(นับวันจ่ายเป็น 1 วันด้วย)\n\n'
+                  '• ตั้ง 1 วัน = โชว์ยอดเฉพาะวันจ่าย\n'
+                  '• ตั้ง 7 วัน = โชว์ 7 วันสุดท้ายก่อนจ่าย (วันจ่าย + อีก 6 วัน)\n\n'
+                  'บิลที่อยู่ไกลกว่าช่วงนี้ยังไม่นำมาคำนวณยอดรายวัน '
+                  'แต่ตั้งแยกได้ในหน้าแก้บิล',
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -94,12 +110,8 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpace.sm),
                 Text(
-                  'แอปจะเริ่มบอกให้เก็บล่วงหน้านานแค่ไหนก่อนวันจ่าย '
-                  '(นับวันจ่ายเป็น 1 วัน) — เช่น ตั้ง 1 วัน = โชว์ยอดเฉพาะวันจ่าย, '
-                  'ตั้ง 7 วัน = โชว์ 7 วันสุดท้ายก่อนจ่าย\n'
-                  'บิลที่อยู่ไกลกว่านี้ยังไม่นำมาเก็บ '
-                  '(ตั้งแยกได้ในหน้าแก้บิล)',
-                  style: AppType.muted(context),
+                  'นับวันจ่ายเป็น 1 วัน · บิลที่อยู่ไกลกว่าช่วงนี้ยังไม่เก็บ',
+                  style: AppType.caption(context),
                 ),
                 const SizedBox(height: AppSpace.sm),
                 OutlinedButton.icon(
@@ -246,19 +258,19 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpace.md),
-          SectionCard(
+          const SectionCard(
             title: 'วิธีคำนวณ',
-            child: Text(
-              '• ทุกบิลมีวันจ่ายของตัวเอง\n'
-              '• วันที่เหลือ = วันจ่าย − วันนี้ + 1 (นับรวมสองวัน)\n'
-              '• เงินในคลังจะไปหักบิลที่ใกล้กำหนดที่สุดก่อน\n'
-              '• ยอดที่ต้องเก็บต่อวันของแต่ละบิล = '
-              'ยอดที่ยังไม่มีคลังรับรอง ÷ วันที่เหลือ (ปัดขึ้น)\n'
-              '• ยอดที่แสดง = ผลบวกของทุกบิล\n'
-              '• ถ้าผ่านไปหนึ่งวันโดยไม่บันทึก วันที่เหลือจะลดลง '
-              'และยอดต่อวันจะเพิ่มขึ้นอัตโนมัติ\n'
-              '• กดจ่ายบิลได้ก็ต่อเมื่อเงินในคลังพอจ่ายบิลนั้น',
-              style: AppType.body(context),
+            action: AppInfoButton(
+              title: 'แอปจะคำนวณยังไง',
+              body: '• ทุกบิลมีวันจ่ายของตัวเอง\n'
+                  '• วันที่เหลือ = วันจ่าย − วันนี้ + 1 (นับรวมสองวัน)\n'
+                  '• เงินในคลังจะไปหักบิลที่ใกล้กำหนดที่สุดก่อน\n'
+                  '• ยอดที่ต้องเก็บต่อวันของแต่ละบิล = '
+                  'ยอดที่ยังไม่มีคลังรับรอง ÷ วันที่เหลือ (ปัดขึ้น)\n'
+                  '• ยอดที่แสดง = ผลบวกของทุกบิล\n'
+                  '• ถ้าผ่านไปหนึ่งวันโดยไม่บันทึก วันที่เหลือจะลดลง '
+                  'และยอดต่อวันจะเพิ่มขึ้นอัตโนมัติ\n'
+                  '• กดจ่ายบิลได้ก็ต่อเมื่อเงินในคลังพอจ่ายบิลนั้น',
             ),
           ),
         ],

@@ -43,6 +43,14 @@
 
 ข้อความไทยมี `height` ขยายเพื่ออ่านง่าย — ห้ามลดลง
 
+### คำอธิบายยาว → ปุ่ม `i`
+
+ใช้ `AppInfoButton` (`lib/ui/widgets/info_button.dart`) เฉพาะคำอธิบายที่ยาวเกิน 2 บรรทัด:
+วางปุ่ม "i" ขนาด `xl` ไว้ข้างหัวข้อ กดแล้วเปิด `AlertDialog` เนื้อหา `AppType.body`
+
+**ข้อความสั้น 1 บรรทัดยังโชว์เลย** — รวมถึงคู่มือ 3 ขั้นตอนหน้าเปล่า ไม่ควรซ่อนหลังปุ่ม
+(ผู้ใช้ครั้งแรกต้องเห็นว่าควรทำอะไรโดยไม่ต้องกดค้นหา)
+
 **ห้ามปล่อย `Text`, `SwitchListTile.title/subtitle`, `ListTile.title/subtitle` โดยไม่ใส่ `style: AppType.*`**
 ค่าที่ Material ให้มา (`bodyLarge` 16px) ไม่ใช่ของ design system — มันจะใหญ่กว่าคำอธิบาย `caption` (12px) ทันที
 กฎความต่าง: `rowTitle` − `caption` ≤ 2px และ `rowTitle` < `title` (หัวข้อส่วน)

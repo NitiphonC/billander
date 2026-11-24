@@ -2,6 +2,7 @@ import 'package:billandar/data/storage.dart';
 import 'package:billandar/state/app_state.dart';
 import 'package:billandar/ui/bills_screen.dart';
 import 'package:billandar/ui/dashboard_screen.dart';
+import 'package:billandar/ui/settings_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,12 +75,39 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text('บอกจำนวนเงิน วันที่จ่าย และความถี่ '
-        'แอปจะคำนวณเองว่าต้องเก็บวันละเท่าไหร่'), findsOneWidget);
+    expect(find.text('ใส่ชื่อ จำนวนเงิน วันที่จ่าย — แอปคำนวณยอดต่อวันให้'),
+        findsOneWidget);
     expect(find.text('เช่น ค่าเช่า, ค่าไฟ, ผ่อนมือถือ'), findsOneWidget);
     expect(find.text('เช่น 250 หรือ 250.50'), findsOneWidget);
     expect(find.textContaining('วันจ่ายก็ถือเป็นวันเก็บด้วยเสมอ'), findsOneWidget);
     expect(find.textContaining('จ่ายครั้งเดียว → ไม่ซ้ำ'), findsOneWidget);
-    expect(find.textContaining('ระยะเก็บล่วงหน้า ='), findsOneWidget);
+    expect(find.text('ระยะเก็บล่วงหน้า'), findsOneWidget);
+    expect(find.text('นับวันจ่ายเป็น 1 วันด้วย'), findsOneWidget);
+    expect(find.byTooltip('อ่านเพิ่มเติม: ระยะเก็บล่วงหน้าคืออะไร'),
+        findsOneWidget);
+  });
+
+  testWidgets('UI-INFO-01 กดปุ่ม i เปิดกล่องคำอธิบายแล้วปิดได้',
+      (tester) async {
+    final s = await freshState(tester);
+    await tester.pumpWidget(MaterialApp(
+      home: AnimatedBuilder(
+        animation: s,
+        builder: (_, __) => SettingsScreen(state: s),
+      ),
+    ));
+    await tester.pumpAndSettle();
+
+    // ListView สร้างเฉพาะส่วนที่อยู่ในวิว → ใช้การ์ดแรกที่มองเห็น
+    await tester.tap(find.byTooltip('อ่านเพิ่มเติม: คลังเงินคืออะไร'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('คลังเงินคืออะไร'), findsOneWidget);
+    expect(find.textContaining('ตรงกับคำว่า "ในคลัง"'), findsOneWidget);
+    expect(find.text('เข้าใจแล้ว'), findsOneWidget);
+
+    await tester.tap(find.text('เข้าใจแล้ว'));
+    await tester.pumpAndSettle();
+    expect(find.text('คลังเงินคืออะไร'), findsNothing);
   });
 }
