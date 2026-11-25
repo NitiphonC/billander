@@ -223,7 +223,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('บิลนี้ใช้ค่าที่ตั้งแยก'), findsOneWidget);
-    expect(find.text('4'), findsWidgets);
+    expect(find.textContaining('4 เดือน'), findsOneWidget);
     expect(find.text('กลับไปใช้ค่าตั้งต้น'), findsOneWidget);
   });
 

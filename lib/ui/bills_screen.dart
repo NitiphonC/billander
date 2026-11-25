@@ -552,7 +552,7 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                     '(นับวันจ่ายเป็น 1 วันด้วย)\n\n'
                     '• ใส่ 1 = เก็บเฉพาะวันจ่าย\n'
                     '• ใส่ 7 = เก็บ 7 วันสุดท้ายก่อนจ่าย (วันจ่าย + อีก 6 วัน)\n\n'
-                    'ปิดสวิตช์ "ใช้ค่าที่ตั้งไว้ให้ทุกบิล" เพื่อตั้งเฉพาะบิลนี้',
+                    'กดปุ่ม "ตั้งแยก" เพื่อกำหนดลิมิตเฉพาะบิลนี้',
               ),
             ],
           ),
@@ -562,61 +562,41 @@ class _BillEditorFormState extends State<_BillEditorForm> {
             style: AppType.caption(context),
           ),
           const SizedBox(height: AppSpace.sm),
-          SwitchListTile(
+          ListTile(
             contentPadding: EdgeInsets.zero,
-            title: Text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล',
-                style: AppType.rowTitle(context)),
+            title: Text('ลิมิตสำหรับบิลนี้', style: AppType.rowTitle(context)),
             subtitle: Text(
               _useDefaultAhead
-                  ? 'เปิด = ใช้ค่าตั้งต้น ${widget.state.defaultSaveAheadMonths} '
-                      '${widget.state.defaultSaveAheadUnit.label}\n'
-                      'ปิด = ตั้งใหม่เฉพาะบิลนี้'
-                  : 'บิลนี้ใช้ค่าที่ตั้งแยก ไม่ตามค่าตั้งต้น '
-                      '(${widget.state.defaultSaveAheadMonths} '
-                      '${widget.state.defaultSaveAheadUnit.label})',
+                  ? 'ใช้ค่าตั้งต้น ${widget.state.defaultSaveAheadMonths} '
+                      '${widget.state.defaultSaveAheadUnit.label}'
+                  : 'บิลนี้ใช้ค่าที่ตั้งแยก · '
+                      '${_aheadController.text} ${_saveAheadUnit.label}',
               style: AppType.rowSubtitle(context),
             ),
-            value: _useDefaultAhead,
-            onChanged: (v) => setState(() => _useDefaultAhead = v),
+            trailing: TextButton(
+              onPressed: () async {
+                final result = await showSaveAheadDialog(
+                  context,
+                  initialValue: int.tryParse(_aheadController.text) ??
+                      widget.state.defaultSaveAheadMonths,
+                  initialUnit: _saveAheadUnit,
+                );
+                if (result == null || !mounted) return;
+                setState(() {
+                  _useDefaultAhead = false;
+                  _aheadController.text = result.value.toString();
+                  _saveAheadUnit = result.unit;
+                });
+              },
+              child: Text(
+                _useDefaultAhead ? 'ตั้งแยก' : 'เปลี่ยน',
+                style: AppType.label(context).copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ),
           ),
-          if (!_useDefaultAhead) ...[
-            DropdownButtonFormField<SaveAheadUnit>(
-              initialValue: _saveAheadUnit,
-              decoration: const InputDecoration(
-                labelText: 'หน่วย (วัน / เดือน / ปี)',
-                border: OutlineInputBorder(),
-              ),
-              items: SaveAheadUnit.values
-                  .map((u) =>
-                      DropdownMenuItem(value: u, child: Text(u.label)))
-                  .toList(),
-              onChanged: (v) {
-                if (v != null) setState(() => _saveAheadUnit = v);
-              },
-            ),
-            const SizedBox(height: AppSpace.md),
-            TextFormField(
-              controller: _aheadController,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'เก็บกี่${_saveAheadUnit.label} (รวมวันจ่าย)',
-                helperText: switch (_saveAheadUnit) {
-                  SaveAheadUnit.days =>
-                    'ใส่ 1 = เฉพาะวันจ่าย · ใส่ 7 = วันจ่าย + อีก 6 วันก่อน',
-                  SaveAheadUnit.months =>
-                    'ใส่ 1 = เฉพาะเดือนที่จ่าย · ใส่ 2 = รวมเดือนก่อนหน้า',
-                  SaveAheadUnit.years =>
-                    'ใส่ 1 = เฉพาะปีที่จ่าย · ใส่ 2 = รวมปีก่อนหน้า',
-                },
-                helperStyle: AppType.caption(context),
-                border: const OutlineInputBorder(),
-              ),
-              validator: (v) {
-                final n = int.tryParse(v ?? '');
-                if (n == null || n < 1) return 'ต้องอย่างน้อย 1';
-                return null;
-              },
-            ),
+          if (!_useDefaultAhead)
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
@@ -624,12 +604,12 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                   _useDefaultAhead = true;
                   _aheadController.text =
                       widget.state.defaultSaveAheadMonths.toString();
+                  _saveAheadUnit = widget.state.defaultSaveAheadUnit;
                 }),
                 icon: const Icon(Icons.restore, size: 16),
                 label: const Text('กลับไปใช้ค่าตั้งต้น'),
               ),
             ),
-          ],
           if (widget.bill != null && widget.bill!.isRecurring)
             SwitchListTile(
               contentPadding: EdgeInsets.zero,

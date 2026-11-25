@@ -83,6 +83,7 @@ void main() {
     expect(find.textContaining('จ่ายครั้งเดียว → ไม่ซ้ำ'), findsOneWidget);
     expect(find.text('ระยะเก็บล่วงหน้า'), findsOneWidget);
     expect(find.text('นับวันจ่ายเป็น 1 วันด้วย'), findsOneWidget);
+    expect(find.text('ตั้งแยก'), findsOneWidget);
     expect(find.byTooltip('อ่านเพิ่มเติม: ระยะเก็บล่วงหน้าคืออะไร'),
         findsOneWidget);
   });

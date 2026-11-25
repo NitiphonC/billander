@@ -126,7 +126,7 @@ void main() {
       expect(find.text('ธันวาคม 2569'), findsOneWidget);
     });
 
-    testWidgets('DS-05 สไตล์จริงของป้าย switch ต้องเท่ากับ rowTitle ไม่ใช่ 16px',
+    testWidgets('DS-05 สไตล์จริงของชื่อแถวต้องเท่ากับ rowTitle ไม่ใช่ 16px',
         (tester) async {
       SharedPreferences.setMockInitialValues({});
       final state = AppState(
@@ -150,7 +150,7 @@ void main() {
 
       TextStyle painted(Finder f) =>
           tester.renderObject<RenderParagraph>(f).text.style!;
-      final title = painted(find.text('ใช้ค่าที่ตั้งไว้ให้ทุกบิล'));
+      final title = painted(find.text('ลิมิตสำหรับบิลนี้'));
       final caption = painted(
         find.text('นับวันจ่ายเป็น 1 วันด้วย'),
       );
