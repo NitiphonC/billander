@@ -96,10 +96,7 @@ class BillsScreen extends StatelessWidget {
 
   String _saveAheadLabel(Bill bill) {
     final value = bill.saveAheadMonths ?? state.defaultSaveAheadMonths;
-    final unit = bill.saveAheadUnit ??
-        (bill.saveAheadMonths != null
-            ? SaveAheadUnit.months
-            : state.defaultSaveAheadUnit);
+    final unit = bill.effectiveSaveAheadUnit(state.defaultSaveAheadUnit);
 
     // ใช้จำนวนวันจาก plan ถ้าบิลอยู่ในช่วงเก็บ (นับรวมวันจ่าย)
     //ไม่อยู่ในช่วงก็คำนวณตรง ๆ จากวันนี้ถึงวันจ่าย
@@ -288,7 +285,9 @@ class _BillEditorFormState extends State<_BillEditorForm> {
         TextEditingController(text: bill?.iconText ?? '');
     _iconColor = bill?.iconColor ?? 0xFF1F7A6C;
     _iconDrawing = bill?.iconDrawing;
-    _saveAheadUnit = bill?.saveAheadUnit ?? widget.state.defaultSaveAheadUnit;
+    _saveAheadUnit = bill?.effectiveSaveAheadUnit(
+        widget.state.defaultSaveAheadUnit) ??
+        widget.state.defaultSaveAheadUnit;
     _aheadController = TextEditingController(
       text: (bill?.saveAheadMonths ?? widget.state.defaultSaveAheadMonths)
           .toString(),
@@ -581,12 +580,17 @@ class _BillEditorFormState extends State<_BillEditorForm> {
                       widget.state.defaultSaveAheadMonths,
                   initialUnit: _saveAheadUnit,
                 );
-                if (result == null || !mounted) return;
+                if (result == null || !context.mounted) return;
                 setState(() {
                   _useDefaultAhead = false;
                   _aheadController.text = result.value.toString();
                   _saveAheadUnit = result.unit;
                 });
+                showMessage(
+                  context,
+                  'ตั้งลิมิต ${result.value} ${result.unit.label}แล้ว '
+                  '— กด "บันทึก" เพื่อใช้กับบิล',
+                );
               },
               child: Text(
                 _useDefaultAhead ? 'ตั้งแยก' : 'เปลี่ยน',

@@ -239,10 +239,7 @@ class Calculator {
     final unpaid = bills.where((b) => !b.isPaid).toList();
     final active = unpaid.where((bill) {
       final value = bill.saveAheadMonths ?? defaultSaveAheadMonths;
-      final unit = bill.saveAheadUnit ??
-          (bill.saveAheadMonths != null
-              ? SaveAheadUnit.months
-              : defaultSaveAheadUnit);
+      final unit = bill.effectiveSaveAheadUnit(defaultSaveAheadUnit);
       return !bill.dueDate.isAfter(saveAheadHorizon(t, value, unit));
     }).toList()
       ..sort((a, b) {

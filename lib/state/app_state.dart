@@ -242,6 +242,38 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  /// ลิมิตระดับ "ชุดบิลซ้ำ" — รอบใหม่ที่ระบบสร้างขึ้นจะใช้ค่านี้
+  /// ไม่ใช่ค่าของรอบที่ผู้ใช้เพิ่งแก้ (กันกรณีปิด "ใช้กับรอบในอนาคต" แล้ว
+  /// เพิ่มจำนวนรอบ → รอบใหม่ได้ลิมิตของรอบที่แก้)
+  String _seriesValueKey(String seriesId) => 'series_limit_${seriesId}_value';
+  String _seriesUnitKey(String seriesId) => 'series_limit_${seriesId}_unit';
+
+  Future<void> _setSeriesLimitTemplate(
+    String seriesId,
+    int? value,
+    SaveAheadUnit? unit,
+  ) async {
+    await _setSettingSilent(_seriesValueKey(seriesId), value?.toString() ?? '');
+    await _setSettingSilent(_seriesUnitKey(seriesId), unit?.name ?? '');
+  }
+
+  ({int? value, SaveAheadUnit? unit}) _seriesLimitTemplate(
+    String seriesId,
+    Bill fallback,
+  ) {
+    final rawValue = _settings[_seriesValueKey(seriesId)];
+    if (rawValue == null) {
+      return (value: fallback.saveAheadMonths, unit: fallback.saveAheadUnit);
+    }
+    final rawUnit = _settings[_seriesUnitKey(seriesId)];
+    return (
+      value: int.tryParse(rawValue),
+      unit: rawUnit == null || rawUnit.isEmpty
+          ? null
+          : SaveAheadUnitX.fromStorage(rawUnit),
+    );
+  }
+
   Future<void> _materializeRecurring() async {
     final horizon = _today.add(const Duration(days: 365));
     final groups = <String, List<Bill>>{};
@@ -309,6 +341,7 @@ class AppState extends ChangeNotifier {
         final date = occurrenceDate(anchorDate, unit, every, index);
         if (anchor.repeatTimes == null && date.isAfter(horizon)) break;
         if (!members.any((b) => b.occurrenceIndex == index)) {
+          final seriesLimit = _seriesLimitTemplate(group.key, anchor);
           final created = Bill(
             id: newId(),
             title: anchor.title,
@@ -318,8 +351,8 @@ class AppState extends ChangeNotifier {
             repeatEvery: every,
             repeatTimes: anchor.repeatTimes,
             occurrenceIndex: index,
-            saveAheadMonths: anchor.saveAheadMonths,
-            saveAheadUnit: anchor.saveAheadUnit,
+            saveAheadMonths: seriesLimit.value,
+            saveAheadUnit: seriesLimit.unit,
             iconText: anchor.iconText,
             iconColor: anchor.iconColor,
             iconDrawing: anchor.iconDrawing,
@@ -366,7 +399,8 @@ class AppState extends ChangeNotifier {
       occurrenceIndex: 0,
       saveAheadMonths:
           saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
-      saveAheadUnit: saveAheadUnit,
+      saveAheadUnit: saveAheadUnit ??
+          (saveAheadMonths != null ? SaveAheadUnit.months : null),
       iconText: iconText,
       iconColor: iconColor,
       iconDrawing: iconDrawing,
@@ -376,7 +410,14 @@ class AppState extends ChangeNotifier {
     );
     await _db.upsertBill(bill);
     _bills = [..._bills, bill];
-    if (repeatUnit != RepeatUnit.none) await _materializeRecurring();
+    if (repeatUnit != RepeatUnit.none) {
+      await _setSeriesLimitTemplate(
+        id,
+        bill.saveAheadMonths,
+        bill.saveAheadUnit,
+      );
+      await _materializeRecurring();
+    }
     await _commit();
   }
 
@@ -399,6 +440,10 @@ class AppState extends ChangeNotifier {
     if (original == null) return;
     final every = repeatEvery < 1 ? 1 : repeatEvery;
     final now = DateTime.now().millisecondsSinceEpoch;
+    // ใส่ค่าแต่ไม่ใส่หน่วย → ผูกเป็นเดือนตามกฎข้อมูลเก่า
+    // (กันไม่ให้เกิดบิล "มีค่าแต่ไม่มีหน่วย" ที่ฟอร์มตีความผิด)
+    final effectiveUnit = saveAheadUnit ??
+        (saveAheadMonths != null ? SaveAheadUnit.months : null);
 
     // เปลี่ยนจากซ้ำ → ไม่ซ้ำ: ลบรอบในอนาคตที่ยังไม่จ่ายออก
     if (original.isRecurring && repeatUnit == RepeatUnit.none) {
@@ -461,8 +506,8 @@ class AppState extends ChangeNotifier {
         saveAheadMonths:
             saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
         clearSaveAheadMonths: saveAheadMonths == null,
-        saveAheadUnit: saveAheadUnit,
-        clearSaveAheadUnit: saveAheadUnit == null,
+        saveAheadUnit: effectiveUnit,
+        clearSaveAheadUnit: effectiveUnit == null,
         iconText: iconText,
         clearIconText: iconText == null,
         iconColor: iconColor,
@@ -476,6 +521,14 @@ class AppState extends ChangeNotifier {
       updated.add(next);
     }
     _replaceBills(updated);
+    // เฉพาะกรณี "ใช้กับรอบในอนาคตด้วย" เท่านั้นที่อัปเดตลิมิตระดับชุด
+    if (shouldUpdateSeries && original.seriesId != null) {
+      await _setSeriesLimitTemplate(
+        original.seriesId!,
+        saveAheadMonths != null && saveAheadMonths < 1 ? 1 : saveAheadMonths,
+        effectiveUnit,
+      );
+    }
     if (repeatUnit != RepeatUnit.none) await _materializeRecurring();
     await _commit();
   }

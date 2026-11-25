@@ -1,6 +1,6 @@
 {
-  "versionCode": 23,
-  "versionName": "0.1.22",
-  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.22/app-arm64-v8a-release.apk",
-  "notes": "ปรับแต่งลิมิตรายบิลทำได้จากปุ่ม ตั้งแยก/เปลี่ยน ที่เห็นชัดในฟอร์มบิล ไม่ต้องซ่อนไว้หลังสวิตช์"
+  "versionCode": 24,
+  "versionName": "0.1.23",
+  "apkUrl": "https://github.com/NitiphonC/billander/releases/download/v0.1.23/app-arm64-v8a-release.apk",
+  "notes": "แก้บัคลิมิตรายบิล: override แบบเก่าไม่ถูกแปลงเป็นวันเมื่อแก้บิล, รอบใหม่ของบิลซ้ำใช้ลิมิตระดับชุด, ปฏิทินรองรับบิลไกล, กล่องลิมิตมีขีดจำกัด"
 }

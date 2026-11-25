@@ -91,6 +91,19 @@ class Bill {
   bool get isPaid => paidAt != null;
   bool get isRecurring => repeatUnit != RepeatUnit.none;
 
+  /// หน่วยลิมิตที่บิลนี้ใช้จริง — กฎเดียวสำหรับทุกหน้าจอ/คำนวณ
+  ///
+  /// - มี unit → ใช้ unit ที่ตั้งไว้
+  /// - มีค่าแต่ไม่มี unit (ข้อมูลเก่า) → เดือน
+  /// - ไม่มีทั้งคู่ → ตามค่าตั้งต้นของแอพ
+  SaveAheadUnit effectiveSaveAheadUnit(SaveAheadUnit defaultUnit) =>
+      saveAheadUnit ??
+      (saveAheadMonths != null ? SaveAheadUnit.months : defaultUnit);
+
+  /// true ถ้าบิลนี้ตั้งลิมิตแยกไว้ (มีค่า หรือมี unit ค้างอยู่)
+  bool get hasSaveAheadOverride =>
+      saveAheadMonths != null || saveAheadUnit != null;
+
   /// ใช้กับโค้ด/ข้อมูลเก่า
   bool get recurring => isRecurring;
 

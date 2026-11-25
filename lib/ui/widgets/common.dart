@@ -300,9 +300,9 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
                   SaveAheadUnit.days =>
                     'ใส่ 1 = เฉพาะวันจ่าย · ใส่ 7 = วันจ่าย + อีก 6 วันก่อน',
                   SaveAheadUnit.months =>
-                    'ใส่ 1 = เฉพาะเดือนที่จ่าย · ใส่ 2 = รวมเดือนก่อนหน้า',
+                    'ใส่ 1 = ครอบ 1 เดือนนับจากวันนี้ · ใส่ 2 = 2 เดือน',
                   SaveAheadUnit.years =>
-                    'ใส่ 1 = เฉพาะปีที่จ่าย · ใส่ 2 = รวมปีก่อนหน้า',
+                    'ใส่ 1 = ครอบ 1 ปีนับจากวันนี้ · ใส่ 2 = 2 ปี',
                 },
                 helperStyle: AppType.caption(context),
                 border: const OutlineInputBorder(),
@@ -310,6 +310,12 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
               validator: (v) {
                 final n = int.tryParse(v?.trim() ?? '');
                 if (n == null || n < 1) return 'ต้องอย่างน้อย 1';
+                final max = switch (_unit) {
+                  SaveAheadUnit.days => 3650,
+                  SaveAheadUnit.months => 240,
+                  SaveAheadUnit.years => 20,
+                };
+                if (n > max) return 'ใส่ได้ไม่เกิน $max';
                 return null;
               },
             ),
@@ -329,7 +335,7 @@ class _SaveAheadDialogState extends State<_SaveAheadDialog> {
               (value: int.parse(_controller.text.trim()), unit: _unit),
             );
           },
-          child: const Text('บันทึก'),
+          child: const Text('ใช้ค่านี้'),
         ),
       ],
     );

@@ -21,7 +21,8 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   /// เรียงเดือนจากเดือนปัจจุบันไปข้างหน้า — ผู้ใช้เลื่อนขึ้น/ลงได้ต่อเนื่อง
-  static const _futureMonths = 24;
+  /// ครอบลิมิตแบบปี/ไม่จำกัดของบิล (เดิม 24 เดือน → บิลไกลไม่โชว์)
+  static const _futureMonths = 60;
 
   late final ScrollController _scrollController;
   late final List<DateTime> _months;
@@ -60,7 +61,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       bills: widget.state.bills,
       poolSatang: widget.state.poolSatang,
       today: widget.state.today,
-      maxDays: 1830,
+      maxDays: 3650,
       defaultSaveAheadMonths: widget.state.defaultSaveAheadMonths,
       defaultSaveAheadUnit: widget.state.defaultSaveAheadUnit,
       simulateFutureSavings: false,

@@ -219,8 +219,11 @@ class DashboardScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpace.sm),
           Text(
-            'เริ่มเก็บล่วงหน้า ${state.defaultSaveAheadMonths} '
+            'ค่าตั้งต้น ${state.defaultSaveAheadMonths} '
             '${state.defaultSaveAheadUnit.label} (รวมวันจ่าย)'
+            '${state.bills.any((b) => b.hasSaveAheadOverride)
+                ? ' · มีบิลตั้งแยก'
+                : ''}'
             '${plan.excludedCount > 0 ? ' · ${plan.excludedCount} บิลยังไม่เข้าช่วง' : ''}',
             style: AppType.statLabel(context).copyWith(color: Colors.white70),
           ),

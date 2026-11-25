@@ -45,7 +45,7 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final finalOverrides =
-        state.bills.where((b) => b.saveAheadMonths != null).toList();
+        state.bills.where((b) => b.hasSaveAheadOverride).toList();
     return SafeArea(
       child: ListView(
         padding: AppSpace.screenPadding,
@@ -155,8 +155,8 @@ class SettingsScreen extends StatelessWidget {
                           const SizedBox(width: AppSpace.sm),
                           Expanded(child: Text(bill.title)),
                           Text(
-                            '${bill.saveAheadMonths} '
-                            '${(bill.saveAheadUnit ?? SaveAheadUnit.months).label}',
+                            '${bill.saveAheadMonths ?? state.defaultSaveAheadMonths} '
+                            '${bill.effectiveSaveAheadUnit(state.defaultSaveAheadUnit).label}',
                           ),
                         ],
                       ),
